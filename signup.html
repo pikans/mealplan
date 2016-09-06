@@ -1,0 +1,26 @@
+<html>
+  <title>Mealplan Signup</title>
+  <h1>Mealplan Signup</h1>
+  {{if .Message}}<p>{{.Message}}</p>{{end}}
+  <form action="/claim" method="POST">
+    <table>
+      <tr>
+        <th></th>
+        {{range .Days}}
+        <th>{{.}}</th>
+        {{end}}
+      </tr>
+      {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
+        {{range $dayindex, $assignee := .Assignees[$duty]}}
+        <td>
+          {{if $assignee}}
+          <button disabled>{{$assignee}}</button>
+          {{else}}
+          <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
+          {{end}}
+        </td>
+        {{end}}
+      </tr>{{end}}
+    </table>
+  </form>
+</html>
