@@ -1,5 +1,8 @@
 <html>
+  <head>
   <title>Mealplan Signup</title>
+  </head>
+  <body>
   <h1>Mealplan Signup</h1>
   {{if .Message}}<p>{{.Message}}</p>{{end}}
   <form action="/claim" method="POST">
@@ -24,4 +27,5 @@
       </tr>{{end}}
     </table>
   </form>
+  </body>
 </html>
