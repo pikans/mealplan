@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,8 +22,6 @@ var Days = []string{"Saturday (9/10)", "Sunday (9/11)", "Monday (9/12)", "Tuesda
 type Data struct {
 	Assignments map[string][]string
 }
-
-var username = "dmz"
 
 func emptyData() *Data {
 	assignments := make(map[string][]string)
@@ -87,6 +86,13 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+
+	username := r.Header.Get("proxy-authenticated-email")
+	if username == "" {
+		http.Error(w, fmt.Sprint("No username"), 401)
+		return
+	}
+	username = strings.TrimSuffix(username, "@mit.edu")
 	dataLock.Lock()
 	defer dataLock.Unlock()
 	currentData, err := readData()
