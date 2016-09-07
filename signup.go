@@ -131,8 +131,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	http.HandleFunc("/claim", claimHandler)
-	http.HandleFunc("/", signupHandler)
-	http.ListenAndServe(":8080", nil)
+func getHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", signupHandler)
+	mux.HandleFunc("/claim", claimHandler)
+	return mux
 }
