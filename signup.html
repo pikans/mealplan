@@ -10,8 +10,9 @@
         <th>{{.}}</th>
         {{end}}
       </tr>
+      {{$ass := .Assignments}}
       {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
-        {{range $dayindex, $assignee := .Assignees[$duty]}}
+        {{range $dayindex, $assignee := (index $ass $duty)}}
         <td>
           {{if $assignee}}
           <button disabled>{{$assignee}}</button>

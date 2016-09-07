@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -15,6 +16,8 @@ type Data struct {
 	Assignments map[string][]string
 	sync.Mutex
 }
+
+var username = "dmz"
 
 var currentData Data
 
@@ -42,16 +45,32 @@ func handleErr(w http.ResponseWriter, err error) {
 }
 
 func claimHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hi")
+	r.ParseForm()
+	var dutyClaimed string
+	var dayIndexClaimed int
+	for key := range r.Form {
+		splitKey := strings.Split(key, "/")
+		if len(splitKey) == 3 && splitKey[0] == "claim" {
+			dutyClaimed = splitKey[1]
+			var err error
+			dayIndexClaimed, err = strconv.Atoi(splitKey[2])
+			if err != nil {
+				handleErr(w, err)
+				return
+			}
+			break
+		}
+	}
+	currentData.Lock()
+	defer currentData.Unlock()
+	if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
+		log.Printf("%v claimed %v/%v", username, dutyClaimed, Days[dayIndexClaimed])
+		ass[dayIndexClaimed] = username
+	}
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
-	var msg string
-	switch r.Method {
-	case "POST":
-		msg = "post"
-	case "GET":
-	}
 	t, err := template.ParseFiles("signup.html")
 	if err != nil {
 		return
@@ -61,7 +80,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	d := DisplayData{
 		Days,
 		Duties,
-		msg,
+		"",
 		&currentData,
 	}
 	err = t.Execute(w, d)
@@ -73,7 +92,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	currentData = emptyData()
-	//http.HandleFunc("/claim", claimHandler)
+	http.HandleFunc("/claim", claimHandler)
 	http.HandleFunc("/", signupHandler)
 	http.ListenAndServe(":8080", nil)
 }
