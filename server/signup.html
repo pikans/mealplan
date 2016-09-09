@@ -19,6 +19,7 @@ td {
   <body>
   <h1>Mealplan Signup</h1>
   {{if .Message}}<p>{{.Message}}</p>{{end}}
+  {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
   <form action="/claim" method="POST">
     <table>
       <tr>
@@ -28,11 +29,13 @@ td {
         {{end}}
       </tr>
       {{$ass := .Assignments}}
+      {{$unauth := .Unauth}}
       {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
         {{range $dayindex, $assignee := (index $ass $duty)}}
         <td>
           {{if $assignee}}
           <button disabled>{{$assignee}}</button>
+          {{else if $unauth}}
           {{else}}
           <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
           {{end}}

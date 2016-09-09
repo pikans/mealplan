@@ -22,12 +22,40 @@ type DisplayData struct {
 	Days    []string
 	Duties  []string
 	Message string
+	Unauth  bool
 	*Data
 }
 
 func handleErr(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	log.Printf("%s\n", err)
+}
+
+func unauthHandler(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("signup.html")
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	dataLock.Lock()
+	defer dataLock.Unlock()
+	currentData, err := ReadData(dataFile)
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	d := DisplayData{
+		Days,
+		Duties,
+		"",
+		true,
+		currentData,
+	}
+	err = t.Execute(w, d)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +75,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		Days,
 		Duties,
 		"",
+		false,
 		currentData,
 	}
 	err = t.Execute(w, d)
@@ -133,6 +162,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		Days:    Days,
 		Duties:  Duties,
 		Message: "",
+		Unauth:  false,
 		Data:    currentData,
 	}
 	err = t.Execute(w, d)
@@ -178,5 +208,11 @@ func getHandler() http.Handler {
 	mux.HandleFunc("/claim", claimHandler)
 	mux.HandleFunc("/admin", adminHandler)
 	mux.HandleFunc("/adminSave", adminSaveHandler)
+	return mux
+}
+
+func getUnauthHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", unauthHandler)
 	return mux
 }

@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,7 +39,7 @@ func getMITCertEmailAddressFullName(chains [][]*x509.Certificate) (string, strin
 	return "", "", errors.New("no MIT certificate email address found")
 }
 
-func run(handler http.Handler, register, listenhttp, listenhttps, authenticate, authorize, state string) {
+func run(handler http.Handler, unauthHandler http.Handler, register, listenhttp, listenhttps, authenticate, authorize, state string) {
 	var letsEncryptManager letsencrypt.Manager
 	if err := letsEncryptManager.CacheFile(state); err != nil {
 		log.Fatal(err)
@@ -86,7 +85,7 @@ func run(handler http.Handler, register, listenhttp, listenhttps, authenticate, 
 			if err := doAuthorize(req); err == nil {
 				handler.ServeHTTP(w, req)
 			} else {
-				http.Error(w, fmt.Sprint(err), 401)
+				unauthHandler.ServeHTTP(w, req)
 			}
 		}),
 	}
@@ -108,5 +107,5 @@ func main() {
 		flag.Usage()
 		log.Fatal("please specify the required arguments")
 	}
-	run(getHandler(), *register, *listenhttp, *listenhttps, *authenticate, *authorize, *state)
+	run(getHandler(), getUnauthHandler(), *register, *listenhttp, *listenhttps, *authenticate, *authorize, *state)
 }
