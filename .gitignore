@@ -1,0 +1,5 @@
+*.dat
+*.pem
+*.swp
+server/server
+admin/admin

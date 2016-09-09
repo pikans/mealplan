@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/daniel-ziegler/mealplan/moira"
+
 	. "github.com/daniel-ziegler/mealplan"
 )
 
@@ -26,6 +28,32 @@ type DisplayData struct {
 func handleErr(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	log.Printf("%s\n", err)
+}
+
+func signupHandler(w http.ResponseWriter, r *http.Request) {
+	t, err := template.ParseFiles("signup.html")
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	dataLock.Lock()
+	defer dataLock.Unlock()
+	currentData, err := ReadData(dataFile)
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	d := DisplayData{
+		Days,
+		Duties,
+		"",
+		currentData,
+	}
+	err = t.Execute(w, d)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func claimHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,8 +99,25 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func signupHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("signup.html")
+func adminAuth(w http.ResponseWriter, r *http.Request) bool {
+	username := r.Header.Get("proxy-authenticated-email")
+	if username == "" {
+		http.Error(w, "No username", 401)
+		return false
+	}
+	if err := moira.IsAuthorized("yfnkm", username); err != nil {
+		http.Error(w, fmt.Sprintf("Not an admin: %v", username), 403)
+		return false
+	}
+	return true
+}
+
+func adminHandler(w http.ResponseWriter, r *http.Request) {
+	if !adminAuth(w, r) {
+		return
+	}
+
+	t, err := template.ParseFiles("admin.html")
 	if err != nil {
 		handleErr(w, err)
 		return
@@ -85,10 +130,10 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Days,
-		Duties,
-		"",
-		currentData,
+		Days:    Days,
+		Duties:  Duties,
+		Message: "",
+		Data:    currentData,
 	}
 	err = t.Execute(w, d)
 	if err != nil {
@@ -97,9 +142,41 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
+	if !adminAuth(w, r) {
+		return
+	}
+
+	dataLock.Lock()
+	defer dataLock.Unlock()
+	currentData, err := ReadData(dataFile)
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	oldversion := r.FormValue("oldversion")
+	if got, want := oldversion, currentData.VersionID; got != want {
+		http.Error(w, fmt.Sprintf("Not up to date! Got %v, wanted %v", got, want), http.StatusConflict)
+		return
+	}
+	for _, duty := range Duties {
+		for dayindex := range currentData.Assignments[duty] {
+			currentData.Assignments[duty][dayindex] = r.FormValue(fmt.Sprintf("assignee/%v/%v", duty, dayindex))
+		}
+	}
+	if err = WriteData(dataFile, currentData); err != nil {
+		handleErr(w, err)
+		return
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
 func getHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", signupHandler)
 	mux.HandleFunc("/claim", claimHandler)
+	mux.HandleFunc("/admin", adminHandler)
+	mux.HandleFunc("/adminSave", adminSaveHandler)
 	return mux
 }

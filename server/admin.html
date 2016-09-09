@@ -1,0 +1,43 @@
+<html>
+  <head>
+  <title>Sekrit Admin Interface</title>
+<style>
+table {
+  border-collapse: collapse;
+}
+th {
+  padding: 4px 8px;
+  width: 12em;
+}
+td {
+  padding: 8;
+  border: 1px solid black;
+    text-align: center;
+}
+</style>
+  </head>
+  <body>
+  <h1>Sekrit Admin Interface</h1>
+  {{if .Message}}<p>{{.Message}}</p>{{end}}
+  <form action="/adminSave" method="POST">
+    <table>
+      <tr>
+        <th></th>
+        {{range .Days}}
+        <th>{{.}}</th>
+        {{end}}
+      </tr>
+      {{$ass := .Assignments}}
+      {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
+        {{range $dayindex, $assignee := (index $ass $duty)}}
+        <td>
+          <input type="text" name="assignee/{{$duty}}/{{$dayindex}}" value="{{$assignee}}"/>
+        </td>
+        {{end}}
+      </tr>{{end}}
+    </table>
+    <input type="hidden" name="oldversion" value="{{.VersionID}}"/>
+    <button name="save">Save!</button>
+  </form>
+  </body>
+</html>

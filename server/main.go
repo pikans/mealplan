@@ -61,41 +61,12 @@ func run(handler http.Handler, register, listenhttp, listenhttps, authenticate, 
 		log.Fatalf("failed to parse client CA certificate")
 	}
 
-	isAuthorized := func(email string) error {
-		email = strings.ToLower(email)
-
-		members, err := moira.GetMoiraNFSGroupMembers(authorize)
-		if err != nil {
-			return err
-		}
-
-		// USER entries -- MIT kerberos accounts
-		at_mit_edu := "@mit.edu"
-		if strings.HasSuffix(email, at_mit_edu) && strings.Count(email, "@") == 1 {
-			kerberos := strings.TrimSuffix(email, at_mit_edu)
-			for _, member := range members {
-				if member == "uid="+kerberos+",OU=users,OU=moira,dc=MIT,dc=EDU" {
-					return nil
-				}
-			}
-		}
-
-		// STRING entries -- full email addresses
-		for _, member := range members {
-			if member == "cn="+email+",OU=strings,OU=moira,dc=MIT,dc=EDU" {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("authenticated as %q, but not authorized because not on moira list %q", email, authorize)
-	}
-
 	doAuthorize := func(req *http.Request) error {
 		email, fullname, err := getMITCertEmailAddressFullName(req.TLS.VerifiedChains)
 		if err != nil {
 			return err
 		}
-		if err := isAuthorized(email); err != nil {
+		if err := moira.IsAuthorized(authorize, email); err != nil {
 			return err
 		}
 		req.Header.Set("proxy-authenticated-full-name", fullname)

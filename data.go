@@ -1,7 +1,9 @@
 package mealplan
 
 import (
+	"encoding/base64"
 	"encoding/gob"
+	"math/rand"
 	"os"
 )
 
@@ -10,6 +12,7 @@ var Days = []string{"Saturday (9/10)", "Sunday (9/11)", "Monday (9/12)", "Tuesda
 
 type Data struct {
 	Assignments map[string][]string
+	VersionID   string
 }
 
 func emptyData() *Data {
@@ -19,6 +22,7 @@ func emptyData() *Data {
 	}
 	return &Data{
 		assignments,
+		randomVersion(),
 	}
 }
 
@@ -36,6 +40,7 @@ func ReadData(dataFile string) (*Data, error) {
 }
 
 func WriteData(dataFile string, data *Data) error {
+	data.VersionID = randomVersion()
 	file, err := os.Create(dataFile)
 	if err != nil {
 		return err
@@ -44,4 +49,13 @@ func WriteData(dataFile string, data *Data) error {
 	enc := gob.NewEncoder(file)
 	err = enc.Encode(data)
 	return err
+}
+
+func randomVersion() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString(b)
 }
