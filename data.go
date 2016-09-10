@@ -8,7 +8,7 @@ import (
 )
 
 var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
-var Days = []string{"Saturday (9/10)", "Sunday (9/11)", "Monday (9/12)", "Tuesday (9/13)", "Wednesday (9/14)", "Thursday (9/15)", "Friday (9/16)"}
+var Days = []string{"Saturday (9/10)", "Sunday (9/11)", "Monday (9/12)", "Tuesday (9/13)", "Wednesday (9/14)", "Thursday (9/15)", "Friday (9/16)", "Saturday (9/17)", "Sunday (9/18)"}
 
 type Data struct {
 	Assignments map[string][]string
@@ -35,6 +35,11 @@ func ReadData(dataFile string) (*Data, error) {
 		data := new(Data)
 		dec := gob.NewDecoder(file)
 		err := dec.Decode(data)
+		for _, duty := range Duties {
+			for len(data.Assignments[duty]) < len(Days) {
+				data.Assignments[duty] = append(data.Assignments[duty], "")
+			}
+		}
 		return data, err
 	}
 }
