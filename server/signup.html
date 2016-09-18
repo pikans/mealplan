@@ -1,7 +1,7 @@
 <html>
   <head>
   <title>Mealplan Signup</title>
-<style>
+  <style>
 table {
   border-collapse: collapse;
 }
@@ -12,12 +12,97 @@ th {
 td {
   padding: 8;
   border: 1px solid black;
-    text-align: center;
+  text-align: center;
 }
-</style>
+h2 {
+  margin-bottom:0.5em;
+  margin-top:2em;
+  text-align:center;
+}
+.note {
+  font-size: 1.5em;
+  font-style: italic;
+}
+  </style>
   </head>
   <body>
-  <h1>Mealplan Signup</h1>
+    <h1>Mealplan Q1 (Sept 19 - Oct 30)</h1>
+    <p class="note">NOTE: If you'd like to change your assignment, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
+    <h2>Week 1 (starting Sept 19, Oct 3, Oct 17)</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+        <th>Sunday</th>
+      </tr>
+      <tr>
+        <th>Big cook</th>
+        <td>Samir</td><td>Sasha</td><td>Mads</td><td>Madi</td><td>Mehitabel</td><td>Jaz</td><td>Archana</td>
+      </tr>
+      <tr>
+        <th>Little cook</th>
+        <td>Caroline H</td><td>Anvita</td><td>Rachel</td><td>Aradhana</td><td>Miranda</td><td>Zach</td><td>Grant</td>
+      </tr>
+      <tr>
+        <th>Tiny cook</th>
+        <td></td><td></td><td></td><td>Jonas</td><td>Andres</td><td></td><td></td>
+      </tr>
+      <tr>
+        <th>Cleaner 1</th>
+        <td>Merry</td><td>Caroline M</td><td>Emily</td><td>Rebecca</td><td>Jack</td><td>Val</td><td>Annie</td>
+      </tr>
+      <tr>
+        <th>Cleaner 2</th>
+        <td>Laurence</td><td>Alejandro</td><td>Cathie</td><td>Meg</td><td>Mika</td><td>Yuxiao</td><td>John G</td>
+      <tr>
+    </table>
+    <h2>Week 2 (starting Sept 26, Oct 10, Oct 24)</h2>
+    <table>
+      <tr>
+        <th></th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+        <th>Sunday</th>
+      </tr>
+      <tr>
+        <th>Big cook</th>
+        <td>Caroline H</td><td>Sasha</td><td>Rachel</td><td>Madi</td><td>Val</td><td>Jade</td><td>Archana</td>
+      </tr>
+      <tr>
+        <th>Little cook</th>
+        <td>Hannah</td><td>Miranda</td><td>Mads</td><td>Aradhana</td><td>Andres</td><td>Sam</td><td>Jaz</td>
+      </tr>
+      <tr>
+        <th>Tiny cook</th>
+        <td></td><td></td><td></td><td>Banti</td><td>Deven</td><td></td><td></td>
+      </tr>
+      <tr>
+        <th>Cleaner 1</th>
+        <td>Caroline M</td><td>Cathie</td><td>Laurence</td><td>Rudy</td><td>Jack</td><td>Annie</td><td>Heather</td>
+      </tr>
+      <tr>
+        <th>Cleaner 2</th>
+        <td>Justin</td><td>Merry</td><td>Alejandro</td><td>Caitlin</td><td>Zach</td><td>Yuxiao</td><td>Dirk</td>
+      <tr>
+    </table>
+
+      <p style="text-align:center;">
+      <b>Deep cleaner:</b> Joanna
+      </p>
+      <p style="text-align:center;">
+      <b>Fridge ninja:</b> Jaz
+      </p>
+
+  <h1>One-time Signup</h1>
   {{if .Message}}<p>{{.Message}}</p>{{end}}
   {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
   <form action="/claim" method="POST">
