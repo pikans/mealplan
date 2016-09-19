@@ -42,23 +42,23 @@ h2 {
       </tr>
       <tr>
         <th>Big cook</th>
-        <td>Samir</td><td>Sasha</td><td>Mads</td><td>Madi</td><td>Mehitabel</td><td>Jaz</td><td>Archana</td>
+        <td rowspan="2">Caroline H <br/> Hannah <br/> Samir</td><td>Sasha</td><td>Mads</td><td>Madi</td><td>Mehitabel</td><td>Jaz</td><td>Archana</td>
       </tr>
       <tr>
         <th>Little cook</th>
-        <td>Caroline H</td><td>Anvita</td><td>Rachel</td><td>Jonas</td><td>Miranda</td><td>Zach</td><td>Grant</td>
+        <td>Anvita</td><td>Rachel</td><td>Aradhana</td><td>Miranda</td><td>Zach</td><td>Grant</td>
       </tr>
       <tr>
         <th>Tiny cook</th>
-        <td></td><td></td><td></td><td></td><td>Andres</td><td></td><td></td>
+        <td></td><td></td><td></td><td>Banti</td><td>Andres</td><td></td><td></td>
       </tr>
       <tr>
         <th>Cleaner 1</th>
-        <td>Merry</td><td>Caroline M</td><td>Emily</td><td>Rebecca</td><td>Jack</td><td>Val</td><td>Annie</td>
+        <td>Merry</td><td>Caroline M</td><td>Emily</td><td>Rudy</td><td>Jack</td><td>Val</td><td>Annie</td>
       </tr>
       <tr>
         <th>Cleaner 2</th>
-        <td>Laurence</td><td>Alejandro</td><td>Cathie</td><td>Aradhana</td><td>Mika</td><td>Yuxiao</td><td>John G</td>
+        <td>Laurence</td><td>Alejandro</td><td>Cathie</td><td>Caitlin</td><td>Mika</td><td>Yuxiao</td><td>John G</td>
       <tr>
     </table>
     <h2>Week 2 (starting Sept 26, Oct 10, Oct 24)</h2>
@@ -75,23 +75,23 @@ h2 {
       </tr>
       <tr>
         <th>Big cook</th>
-        <td>Caroline H</td><td>Sasha</td><td>Rachel</td><td>Madi</td><td>Val</td><td>Jade</td><td>Archana</td>
+        <td rowspan="2">Caroline H <br/> Hannah <br/> Samir</td><td>Sasha</td><td>Rachel</td><td>Madi</td><td>Val</td><td>Jade</td><td>Archana</td>
       </tr>
       <tr>
         <th>Little cook</th>
-        <td>Hannah</td><td>Miranda</td><td>Mads</td><td>Aradhana</td><td>Andres</td><td>Sam</td><td>Jaz</td>
+        <td>Miranda</td><td>Mads</td><td>Jonas</td><td>Andres</td><td>Sam</td><td>Jaz</td>
       </tr>
       <tr>
         <th>Tiny cook</th>
-        <td></td><td></td><td></td><td>Banti</td><td>Deven</td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td>Deven</td><td></td><td></td>
       </tr>
       <tr>
         <th>Cleaner 1</th>
-        <td>Caroline M</td><td>Cathie</td><td>Laurence</td><td>Rudy</td><td>Jack</td><td>Meg</td><td>Heather</td>
+        <td>Caroline M</td><td>Cathie</td><td>Laurence</td><td>Rebecca</td><td>Jack</td><td>Meg</td><td>Heather</td>
       </tr>
       <tr>
         <th>Cleaner 2</th>
-        <td>Justin</td><td>Merry</td><td>Alejandro</td><td>Caitlin</td><td>Zach</td><td>Yuxiao</td><td>Dirk</td>
+        <td>Justin</td><td>Merry</td><td>Alejandro</td><td>Aradhana</td><td>Zach</td><td>Yuxiao</td><td>Dirk</td>
       <tr>
     </table>
 
@@ -102,35 +102,8 @@ h2 {
       <b>Fridge ninja:</b> Jaz
       </p>
 
-  <h1>One-time Signup</h1>
-  {{if .Message}}<p>{{.Message}}</p>{{end}}
-  {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
-  <form action="/claim" method="POST">
-    <table>
-      <tr>
-        <th></th>
-        {{range .Days}}
-        <th>{{.}}</th>
-        {{end}}
-      </tr>
-      {{$ass := .Assignments}}
-      {{$unauth := .Unauth}}
-      {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
-        {{range $dayindex, $assignee := (index $ass $duty)}}
-        <td>
-          {{if $assignee}}
-          <button disabled>{{$assignee}}</button>
-          {{else if $unauth}}
-          {{else}}
-          <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
-          {{end}}
-        </td>
-        {{end}}
-      </tr>{{end}}
-    </table>
-  </form>
   <footer>
-    Problems? Need to unclaim a duty? Email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a>
+    Problems? Need to trade a duty? Email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a>
   </footer>
   </body>
 </html>
