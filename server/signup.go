@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -202,8 +203,26 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin", http.StatusFound)
 }
 
-func getHandler() http.Handler {
+func inventoryHandler(w http.ResponseWriter, r *http.Request) {
+	text, err := ioutil.ReadFile("inventory.html")
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	if _, err := w.Write(text); err != nil {
+		handleErr(w, err)
+		return
+	}
+}
+
+func getDefaultHandler() *http.ServeMux {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/inventory", inventoryHandler)
+	return mux
+}
+
+func getHandler() http.Handler {
+	mux := getDefaultHandler()
 	mux.HandleFunc("/", signupHandler)
 	mux.HandleFunc("/claim", claimHandler)
 	mux.HandleFunc("/admin", adminHandler)
@@ -212,7 +231,7 @@ func getHandler() http.Handler {
 }
 
 func getUnauthHandler() http.Handler {
-	mux := http.NewServeMux()
+	mux := getDefaultHandler()
 	mux.HandleFunc("/", unauthHandler)
 	return mux
 }
