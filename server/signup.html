@@ -37,8 +37,36 @@ h2 {
   <body>
     <h1>Mealplan Q2 (Oct 31 - Dec 11)</h1>
     <p class="note">NOTE: If you'd like to change your assignment, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
+    <div class="week2">
+    <h2>Thanksgiving Break Signup</h2>
+    {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
+    <form action="/claim" method="POST">
+      <table>
+        <tr>
+          <th></th>
+          {{range .Days}}
+          <th>{{.}}</th>
+          {{end}}
+        </tr>
+        {{$ass := .Assignments}}
+        {{$unauth := .Unauth}}
+        {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
+          {{range $dayindex, $assignee := (index $ass $duty)}}
+          <td>
+            {{if $assignee}}
+            <button disabled>{{$assignee}}</button>
+            {{else if $unauth}}
+            {{else}}
+            <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
+            {{end}}
+          </td>
+          {{end}}
+        </tr>{{end}}
+      </table>
+    </form>
+    </div>
     <div class="current week1">
-    <h2>Week 1 (Oct 31 - Nov 6, Nov 14 - Nov 20, Nov 28 - Dec 4)</h2>
+    <h2>Week 1 schedule (Oct 31 - Nov 6, Nov 14 - Nov 20, Nov 28 - Dec 4)</h2>
     <table>
       <tr>
         <th></th>
@@ -63,7 +91,7 @@ h2 {
     </table>
     </div>
     <div class="week2">
-    <h2>Week 2 (Nov 7 - Nov 13, Nov 21 - Nov 27, Dec 5 - Dec 11)</h2>
+    <h2>Week 2 schedule (Nov 7 - Nov 13, Nov 21 - Nov 27, Dec 5 - Dec 11)</h2>
     <table>
       <tr>
         <th></th>
