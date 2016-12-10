@@ -8,7 +8,10 @@ import (
 )
 
 var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
-var Days = []string{"Wednesday (11/23)", "Thursday (11/24)", "Friday (11/25)", "Saturday (11/26)", "Sunday (11/27)"}
+var Days = []string{
+	"Monday (12/12)", "Tuesday (12/13)", "Wednesday (12/14)", "Thursday (12/15)", "Friday (12/16)", "Saturday (12/17)", "Sunday (12/18)",
+	"Monday (12/19)", "Tuesday (12/20)", "Wednesday (12/21)", "Thursday (12/22)", "Friday (12/23)",
+}
 
 type Data struct {
 	Assignments map[string][]string
