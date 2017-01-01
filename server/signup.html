@@ -38,7 +38,7 @@ h2 {
     <h1>Mealplan Q2 (Oct 31 - Dec 11)</h1>
     <p class="note">NOTE: If you'd like to change your assignment, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
     <div class="week2">
-    <h2>Thanksgiving Break Signup</h2>
+    <h2>End of Semester Signup</h2>
     {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
     <form action="/claim" method="POST">
       <table>
@@ -54,7 +54,9 @@ h2 {
           {{range $dayindex, $assignee := (index $ass $duty)}}
           <td>
             {{if $assignee}}
+            {{if ne $assignee "_"}}
             <button disabled>{{$assignee}}</button>
+            {{end}}
             {{else if $unauth}}
             {{else}}
             <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
@@ -65,66 +67,5 @@ h2 {
       </table>
     </form>
     </div>
-    <div class="current week1">
-    <h2>Week 1 schedule (Oct 31 - Nov 6, Nov 14 - Nov 20, Nov 28 - Dec 4)</h2>
-    <table>
-      <tr>
-        <th></th>
-        <th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th>
-      </tr>
-      <tr>
-        <th>Big cook</th>
-        <td rowspan="2">Caroline H<br/>Hannah<br/>Samir</td><td>Sasha</td><td>Rachel</td><td>Madi</td><td>Val</td><td>Mads</td><td>Archana</td>
-      </tr><tr>
-        <th>Little cook</th>
-        <td>Andres</td><td>Aradhana</td><td>Femi</td><td>Miranda</td><td>Jaz</td><td>Danielle</td>
-      </tr><tr>
-        <th>Tiny cook</th>
-        <td></td><td></td><td>Jessica</td><td></td><td>John G</td><td></td><td></td>
-      </tr><tr>
-        <th>Cleaner 1</th>
-        <td>Laurence</td><td>Merry</td><td>Cathie</td><td>Joanna</td><td>Jack</td><td>Caroline M</td><td>Grant</td>
-      </tr><tr>
-        <th>Cleaner 2</th>
-        <td>Rebecca</td><td>Miranda</td><td>Meg</td><td>Yuxiao</td><td>Mika</td><td>Alejandro</td><td>Dirk</td>
-      </tr>
-    </table>
-    </div>
-    <div class="week2">
-    <h2>Week 2 schedule (Nov 7 - Nov 13, Nov 21 - Nov 27, Dec 5 - Dec 11)</h2>
-    <table>
-      <tr>
-        <th></th>
-        <th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th>
-      </tr>
-
-      <tr>
-        <th>Big cook</th>
-        <td rowspan="2">Caroline H<br/>Hannah<br/>Samir</td><td>Sasha</td><td>Andres</td><td>Madi</td><td rowspan="2">Mads<br/>Rachel</td><td>Jade</td><td>Jaz</td>
-      </tr><tr>
-        <th>Little cook</th>
-        <td>Aradhana</td><td>Banti</td><td>Jonathan M</td><td>Sam</td><td>Archana</td>
-      </tr><tr>
-        <th>Tiny cook</th>
-        <td></td><td></td><td></td><td></td><td>Mehitabel</td><td></td><td></td>
-      </tr><tr>
-        <th>Cleaner 1</th>
-        <td>Laurence</td><td>Merry</td><td>Jonathan G-M</td><td>Caitlin</td><td>Val</td><td>Caroline M</td><td>Jack</td>
-      </tr><tr>
-        <th>Cleaner 2</th>
-        <td>Justin</td><td>Cathie</td><td>Alejandro</td><td>Rudy</td><td>Heather</td><td>Yuxiao</td><td>James</td>
-      </tr>
-    </table>
-    </div>
-    <p style="text-align:center;">
-    <b>Deep cleaner (half):</b> Joanna
-    </p>
-    <p style="text-align:center;">
-    <b>Fridge ninja:</b> Zach
-    </p>
-
-  <footer>
-    Problems? Need to trade a duty? Email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a>
-  </footer>
   </body>
 </html>

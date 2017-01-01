@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
+var Duties = []string{"Breakfast cook", "Breakfast cleaner", "Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 var Days = []string{
 	"Monday (12/12)", "Tuesday (12/13)", "Wednesday (12/14)", "Thursday (12/15)", "Friday (12/16)", "Saturday (12/17)", "Sunday (12/18)",
 	"Monday (12/19)", "Tuesday (12/20)", "Wednesday (12/21)", "Thursday (12/22)", "Friday (12/23)",
