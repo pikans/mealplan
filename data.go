@@ -5,25 +5,39 @@ import (
 	"encoding/gob"
 	"math/rand"
 	"os"
+	"time"
 )
 
-var Duties = []string{"Breakfast cook", "Breakfast cleaner", "Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
-var Days = []string{
-	"Monday (12/12)", "Tuesday (12/13)", "Wednesday (12/14)", "Thursday (12/15)", "Friday (12/16)", "Saturday (12/17)", "Sunday (12/18)",
-	"Monday (12/19)", "Tuesday (12/20)", "Wednesday (12/21)", "Thursday (12/22)", "Friday (12/23)",
-}
+var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 
 type Data struct {
+	Days        []string
 	Assignments map[string][]string
 	VersionID   string
 }
 
+func makeDays() []string {
+	EST, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		panic(err)
+	}
+	startDate := time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
+	endDate := time.Date(2017, 2, 12, 0, 0, 0, 0, EST)
+	days := []string{}
+	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
+		days = append(days, date.Format("Monday (1/2)"))
+	}
+	return days
+}
+
 func emptyData() *Data {
 	assignments := make(map[string][]string)
+	days := makeDays()
 	for _, duty := range Duties {
-		assignments[duty] = make([]string, len(Days))
+		assignments[duty] = make([]string, len(days))
 	}
 	return &Data{
+		days,
 		assignments,
 		randomVersion(),
 	}
@@ -39,7 +53,7 @@ func ReadData(dataFile string) (*Data, error) {
 		dec := gob.NewDecoder(file)
 		err := dec.Decode(data)
 		for _, duty := range Duties {
-			for len(data.Assignments[duty]) < len(Days) {
+			for len(data.Assignments[duty]) < len(data.Days) {
 				data.Assignments[duty] = append(data.Assignments[duty], "")
 			}
 		}

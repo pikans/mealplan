@@ -20,7 +20,6 @@ const dataFile = "signups.dat"
 var dataLock sync.Mutex // :/
 
 type DisplayData struct {
-	Days    []string
 	Duties  []string
 	Message string
 	Unauth  bool
@@ -46,7 +45,6 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Days,
 		Duties,
 		"",
 		true,
@@ -73,7 +71,6 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Days,
 		Duties,
 		"",
 		false,
@@ -118,7 +115,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
-		log.Printf("%v claimed %v/%v", username, dutyClaimed, Days[dayIndexClaimed])
+		log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
 		ass[dayIndexClaimed] = username
 	}
 	err = WriteData(dataFile, currentData)
@@ -160,7 +157,6 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Days:    Days,
 		Duties:  Duties,
 		Message: "",
 		Unauth:  false,
