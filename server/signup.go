@@ -115,58 +115,60 @@ func getTrimmedUsername(r *http.Request) string {
 }
 
 func claimHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	var dutyClaimed string
-	var dayIndexClaimed int
-	var claimingSomething bool
-	for key := range r.Form {
-		splitKey := strings.Split(key, "/")
-		if len(splitKey) == 3 && splitKey[0] == "claim" {
-			claimingSomething = true
-			dutyClaimed = splitKey[1]
-			var err error
-			dayIndexClaimed, err = strconv.Atoi(splitKey[2])
-			if err != nil {
-				handleErr(w, err)
-				return
+	if r.Method == "POST" {
+		r.ParseForm()
+		var dutyClaimed string
+		var dayIndexClaimed int
+		var claimingSomething bool
+		for key := range r.Form {
+			splitKey := strings.Split(key, "/")
+			if len(splitKey) == 3 && splitKey[0] == "claim" {
+				claimingSomething = true
+				dutyClaimed = splitKey[1]
+				var err error
+				dayIndexClaimed, err = strconv.Atoi(splitKey[2])
+				if err != nil {
+					handleErr(w, err)
+					return
+				}
+				break
 			}
-			break
 		}
-	}
 
-	username := getTrimmedUsername(r)
-	if username == "" {
-		http.Error(w, "No username", 401)
-	}
-
-	dataLock.Lock()
-	defer dataLock.Unlock()
-	currentData, err := ReadData(dataFile)
-	if err != nil {
-		handleErr(w, err)
-		return
-	}
-
-	if claimingSomething {
-		// claim the duty
-		if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
-			log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
-			ass[dayIndexClaimed] = username
+		username := getTrimmedUsername(r)
+		if username == "" {
+			http.Error(w, "No username", 401)
 		}
-	}
-	// also update planned attendance
-	plannedAttendance := make([]bool, len(currentData.Days))
-	for dayindex := range currentData.Days {
-		vals := r.Form[fmt.Sprintf("attend/%d", dayindex)]
-		willAttend := len(vals) == 1 && vals[0] == "true"
-		plannedAttendance[dayindex] = willAttend
-	}
-	currentData.PlannedAttendance[username] = plannedAttendance
 
-	err = WriteData(dataFile, currentData)
-	if err != nil {
-		handleErr(w, err)
-		return
+		dataLock.Lock()
+		defer dataLock.Unlock()
+		currentData, err := ReadData(dataFile)
+		if err != nil {
+			handleErr(w, err)
+			return
+		}
+
+		if claimingSomething {
+			// claim the duty
+			if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
+				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
+				ass[dayIndexClaimed] = username
+			}
+		}
+		// also update planned attendance
+		plannedAttendance := make([]bool, len(currentData.Days))
+		for dayindex := range currentData.Days {
+			vals := r.Form[fmt.Sprintf("attend/%d", dayindex)]
+			willAttend := len(vals) == 1 && vals[0] == "true"
+			plannedAttendance[dayindex] = willAttend
+		}
+		currentData.PlannedAttendance[username] = plannedAttendance
+
+		err = WriteData(dataFile, currentData)
+		if err != nil {
+			handleErr(w, err)
+			return
+		}
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
