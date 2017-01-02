@@ -103,7 +103,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	d := DisplayData{
 		Duties:     Duties,
-		Authorized: false,
+		Authorized: true,
 		Days:       currentData.Days,
 		CurrentUserPlannedAttendance: plan,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
