@@ -21,7 +21,6 @@ var dataLock sync.Mutex // :/
 
 type DisplayData struct {
 	Duties                       []string
-	Message                      string
 	Unauth                       bool
 	Days                         []string
 	CurrentUserPlannedAttendance []bool
@@ -49,10 +48,9 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Duties:  Duties,
-		Message: "",
-		Unauth:  true,
-		Days:    currentData.Days,
+		Duties: Duties,
+		Unauth: true,
+		Days:   currentData.Days,
 		CurrentUserPlannedAttendance: nil,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -92,10 +90,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	d := DisplayData{
-		Duties:  Duties,
-		Message: "",
-		Unauth:  false,
-		Days:    currentData.Days,
+		Duties: Duties,
+		Unauth: false,
+		Days:   currentData.Days,
 		CurrentUserPlannedAttendance: plan,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -204,10 +201,9 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Duties:  Duties,
-		Message: "",
-		Unauth:  false,
-		Days:    currentData.Days,
+		Duties: Duties,
+		Unauth: false,
+		Days:   currentData.Days,
 		CurrentUserPlannedAttendance: nil,
 		Assignments:                  currentData.Assignments,
 		VersionID:                    currentData.VersionID,
