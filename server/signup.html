@@ -76,7 +76,7 @@ h2 {
           </th>
           {{range $dayindex, $attendance := .TotalAttendance}}
           <td>
-            {{if $.Authorized)}}
+            {{if $.Authorized}}
               <input type="checkbox" name="attend/{{$dayindex}}" value="true"
               {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
             {{end}}
