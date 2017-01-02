@@ -7,7 +7,7 @@ table {
 }
 th {
   padding: 4px 8px;
-  width: 12em;
+  width: 20em;
 }
 td {
   padding: 8;
@@ -32,6 +32,9 @@ h2 {
 .usual {
   text-decoration: line-through;
 }
+.attendance-row > td, .attendance-row > th {
+  border: none;
+}
   </style>
   </head>
   <body>
@@ -49,7 +52,6 @@ h2 {
           {{end}}
         </tr>
         {{$ass := .Assignments}}
-        {{$unauth := .Unauth}}
         {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
           {{range $dayindex, $assignee := (index $ass $duty)}}
           <td>
@@ -57,13 +59,32 @@ h2 {
             {{if ne $assignee "_"}}
             <button disabled>{{$assignee}}</button>
             {{end}}
-            {{else if $unauth}}
+            {{else if $.Unauth}}
             {{else}}
             <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
             {{end}}
           </td>
           {{end}}
         </tr>{{end}}
+        <tr class="attendance-row">
+          <th>
+            {{if $.Unauth}}
+              Planned attendance (an underestimate!)
+            {{else}}
+              Will you be at dinner?
+              <button name="attends_submit">Save</button>
+            {{end}}
+          </th>
+          {{range $dayindex, $attendance := .TotalAttendance}}
+          <td>
+            {{if (not $.Unauth)}}
+              <input type="checkbox" name="attend/{{$dayindex}}" value="true"
+              {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
+            {{end}}
+            {{$attendance}}
+          </td>
+          {{end}}
+        </tr>
       </table>
     </form>
     </div>
