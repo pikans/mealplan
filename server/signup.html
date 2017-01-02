@@ -42,7 +42,7 @@ h2 {
     <p class="note">NOTE: If you'd like to change your assignment, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
     <div class="week2">
     <h2>IAP Signup</h2>
-    {{if .Unauth}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
+    {{if (not .Authorized)}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
     <form action="/claim" method="POST">
       <table>
         <tr>
@@ -59,8 +59,7 @@ h2 {
             {{if ne $assignee "_"}}
             <button disabled>{{$assignee}}</button>
             {{end}}
-            {{else if $.Unauth}}
-            {{else}}
+            {{else if $.Authorized}}
             <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
             {{end}}
           </td>
@@ -68,16 +67,16 @@ h2 {
         </tr>{{end}}
         <tr class="attendance-row">
           <th>
-            {{if $.Unauth}}
-              Planned attendance (an underestimate!)
-            {{else}}
+            {{if $.Authorized}}
               Will you be at dinner?
               <button name="attends_submit">Save</button>
+            {{else}}
+              Planned attendance (an underestimate!)
             {{end}}
           </th>
           {{range $dayindex, $attendance := .TotalAttendance}}
           <td>
-            {{if (not $.Unauth)}}
+            {{if $.Authorized)}}
               <input type="checkbox" name="attend/{{$dayindex}}" value="true"
               {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
             {{end}}

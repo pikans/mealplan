@@ -8,8 +8,12 @@ import (
 	"time"
 )
 
+// The list of duties (currently hard-coded)
 var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 
+// The data that is stored on disk. For "simplicity", the application just serializes and
+// deserializes the entire state into / out of a single file, rather than making use of a full-blown
+// database.
 type Data struct {
 	Days              []string
 	Assignments       map[string][]string
@@ -17,6 +21,7 @@ type Data struct {
 	VersionID         string
 }
 
+// Make the list of days of the current period (currently hardcoded for IAP)
 func makeDays() []string {
 	EST, err := time.LoadLocation("America/New_York")
 	if err != nil {
@@ -31,6 +36,7 @@ func makeDays() []string {
 	return days
 }
 
+// Make the empty state: no assignments, no planned attendance
 func emptyData() *Data {
 	assignments := make(map[string][]string)
 	days := makeDays()
@@ -46,14 +52,18 @@ func emptyData() *Data {
 	}
 }
 
+// Read the entire data from a file
 func ReadData(dataFile string) (*Data, error) {
 	file, err := os.Open(dataFile)
 	switch {
 	case os.IsNotExist(err):
+		// Doesn't exist: just use the empty state
 		return emptyData(), nil
 	case err != nil:
+		// Some other error: return it
 		return nil, err
 	default:
+		// Read the data out of the file
 		defer file.Close()
 		data := new(Data)
 		dec := gob.NewDecoder(file)
@@ -74,6 +84,7 @@ func ReadData(dataFile string) (*Data, error) {
 	}
 }
 
+// Write the entire data back to the file
 func WriteData(dataFile string, data *Data) error {
 	data.VersionID = randomVersion()
 	file, err := os.Create(dataFile)
@@ -86,6 +97,9 @@ func WriteData(dataFile string, data *Data) error {
 	return err
 }
 
+// Generate a random version string.
+// Used to make sure saving in the admin view only goes through if no one has claimed a duty in the
+// meantime (which would get overwritten).
 func randomVersion() string {
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
@@ -95,6 +109,7 @@ func randomVersion() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
+// Returns, for each day, how many people have indicated they want to come.
 func (data *Data) ComputeTotalAttendance() []int {
 	totals := []int{}
 	for dayindex := range data.Days {
