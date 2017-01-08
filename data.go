@@ -15,14 +15,14 @@ var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 // deserializes the entire state into / out of a single file, rather than making use of a full-blown
 // database.
 type Data struct {
-	Days              []string
+	DayNames          []string
 	Assignments       map[string][]string
 	PlannedAttendance map[string][]bool
 	VersionID         string
 }
 
 // Make the list of days of the current period (currently hardcoded for IAP)
-func makeDays() []string {
+func makeDayNames() []string {
 	EST, err := time.LoadLocation("America/New_York")
 	if err != nil {
 		panic(err)
@@ -39,7 +39,7 @@ func makeDays() []string {
 // Make the empty state: no assignments, no planned attendance
 func emptyData() *Data {
 	assignments := make(map[string][]string)
-	days := makeDays()
+	days := makeDayNames()
 	for _, duty := range Duties {
 		assignments[duty] = make([]string, len(days))
 	}
@@ -70,13 +70,13 @@ func ReadData(dataFile string) (*Data, error) {
 		err := dec.Decode(data)
 		// If we've extended the number of days, or this is a fresh file: add blank assignments to fill
 		for _, duty := range Duties {
-			for len(data.Assignments[duty]) < len(data.Days) {
+			for len(data.Assignments[duty]) < len(data.DayNames) {
 				data.Assignments[duty] = append(data.Assignments[duty], "")
 			}
 		}
 		// Also extend planned attendance data
 		for person := range data.PlannedAttendance {
-			for len(data.PlannedAttendance[person]) < len(data.Days) {
+			for len(data.PlannedAttendance[person]) < len(data.DayNames) {
 				data.PlannedAttendance[person] = append(data.PlannedAttendance[person], false)
 			}
 		}
@@ -112,7 +112,7 @@ func randomVersion() string {
 // Returns, for each day, how many people have indicated they want to come.
 func (data *Data) ComputeTotalAttendance() []int {
 	totals := []int{}
-	for dayindex := range data.Days {
+	for dayindex := range data.DayNames {
 		total := 0
 		for _, attends := range data.PlannedAttendance {
 			if attends[dayindex] {

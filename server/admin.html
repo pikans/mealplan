@@ -22,18 +22,21 @@ td {
     <table>
       <tr>
         <th></th>
-        {{range .Days}}
+        {{range .DayNames}}
         <th>{{.}}</th>
         {{end}}
       </tr>
       {{$ass := .Assignments}}
-      {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
+      {{range $duty := .Duties}}
+      <tr>
+        <th>{{$duty}}</th>
         {{range $dayindex, $assignee := (index $ass $duty)}}
         <td>
           <input type="text" name="assignee/{{$duty}}/{{$dayindex}}" value="{{$assignee}}"/>
         </td>
         {{end}}
-      </tr>{{end}}
+      </tr>
+      {{end}}
     </table>
     <input type="hidden" name="oldversion" value="{{.VersionID}}"/>
     <button name="save">Save!</button>

@@ -25,11 +25,24 @@ var dataLock sync.Mutex
 type DisplayData struct {
 	Duties                       []string
 	Authorized                   bool
-	Days                         []string
+	Username                     string
+	DayNames                     []string
+	Weeks                        [][]int
 	CurrentUserPlannedAttendance []bool
 	TotalAttendance              []int
 	Assignments                  map[string][]string
 	VersionID                    string
+}
+
+func makeWeeks(nrDays int) [][]int {
+	weeks := [][]int{}
+	for i := 0; i < nrDays; i++ {
+		if i%7 == 0 {
+			weeks = append(weeks, []int{})
+		}
+		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], i)
+	}
+	return weeks
 }
 
 func handleErr(w http.ResponseWriter, err error) {
@@ -57,7 +70,9 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 	d := DisplayData{
 		Duties:     Duties,
 		Authorized: false,
-		Days:       currentData.Days,
+		Username:   "",
+		DayNames:   currentData.DayNames,
+		Weeks:      makeWeeks(len(currentData.DayNames)),
 		CurrentUserPlannedAttendance: nil,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -89,10 +104,12 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	username := getTrimmedUsername(r)
 	if username == "" {
 		http.Error(w, "No username", http.StatusUnauthorized)
+		return
 	}
+	log.Printf("displaying for user %v", username)
 	plan, ok := currentData.PlannedAttendance[username]
 	if !ok {
-		plan = make([]bool, len(currentData.Days))
+		plan = make([]bool, len(currentData.DayNames))
 	}
 	for _, duty := range Duties {
 		// If duties contain slashes, the logic in claimHandler will break, because the button IDs use
@@ -104,7 +121,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	d := DisplayData{
 		Duties:     Duties,
 		Authorized: true,
-		Days:       currentData.Days,
+		Username:   username,
+		DayNames:   currentData.DayNames,
+		Weeks:      makeWeeks(len(currentData.DayNames)),
 		CurrentUserPlannedAttendance: plan,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -164,13 +183,13 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		if claimingSomething {
 			// Claim the duty
 			if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
-				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
+				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.DayNames[dayIndexClaimed])
 				ass[dayIndexClaimed] = username
 			}
 		}
 		// Also update planned attendance
-		plannedAttendance := make([]bool, len(currentData.Days))
-		for dayindex := range currentData.Days {
+		plannedAttendance := make([]bool, len(currentData.DayNames))
+		for dayindex := range currentData.DayNames {
 			vals := r.Form[fmt.Sprintf("attend/%d", dayindex)]
 			willAttend := len(vals) == 1 && vals[0] == "true"
 			plannedAttendance[dayindex] = willAttend
@@ -224,7 +243,9 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	d := DisplayData{
 		Duties:     Duties,
 		Authorized: true,
-		Days:       currentData.Days,
+		Username:   "",
+		DayNames:   currentData.DayNames,
+		Weeks:      makeWeeks(len(currentData.DayNames)),
 		CurrentUserPlannedAttendance: nil,
 		Assignments:                  currentData.Assignments,
 		VersionID:                    currentData.VersionID, // Store the version in a hidden field

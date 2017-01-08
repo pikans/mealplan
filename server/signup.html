@@ -22,12 +22,11 @@ h2 {
   font-size: 1.5em;
   font-style: italic;
 }
-.week1 {
+.week {
   padding: 1em;
 }
-.week2 {
+.week:nth-child(even) {
   background-color: #eeeeee;
-  padding: 1em;
 }
 .usual {
   text-decoration: line-through;
@@ -35,57 +34,69 @@ h2 {
 .attendance-row > td, .attendance-row > th {
   border: none;
 }
+.save {
+  color: blue;
+  background-color: yellow;
+}
   </style>
   </head>
   <body>
     <h1>IAP Mealplan</h1>
     <p class="note">NOTE: If you'd like to change your assignment, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
-    <div class="week2">
-    <h2>IAP Signup</h2>
-    {{if (not .Authorized)}}<p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>{{end}}
+    {{if .Authorized}}
+      <p style="font-style: italic;">Hi, {{.Username}}</p>
+    {{else}}
+      <p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>
+    {{end}}
     <form action="/claim" method="POST">
-      <table>
-        <tr>
-          <th></th>
-          {{range .Days}}
-          <th>{{.}}</th>
-          {{end}}
-        </tr>
-        {{$ass := .Assignments}}
-        {{range $duty := .Duties}}<tr><th>{{$duty}}</th>
-          {{range $dayindex, $assignee := (index $ass $duty)}}
-          <td>
-            {{if $assignee}}
-            {{if ne $assignee "_"}}
-            <button disabled>{{$assignee}}</button>
+    {{range $week, $days := .Weeks}}
+      <div class="week">
+        <table>
+          <tr>
+            <th></th>
+            {{range $days}}
+            <th>{{index $.DayNames .}}</th>
             {{end}}
-            {{else if $.Authorized}}
-            <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
+          </tr>
+          {{range $duty := $.Duties}}
+          <tr>
+            <th>{{$duty}}</th>
+            {{range $dayindex := $days}}
+              <td>
+              {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
+              {{if $assignee}}
+              {{if ne $assignee "_"}}
+              <button disabled>{{$assignee}}</button>
+              {{end}}
+              {{else if $.Authorized}}
+              <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
+              {{end}}
+              </td>
             {{end}}
-          </td>
+          </tr>
           {{end}}
-        </tr>{{end}}
-        <tr class="attendance-row">
-          <th>
-            {{if $.Authorized}}
+          <tr class="attendance-row">
+            <th>
+              {{if $.Authorized}}
               Will you be at dinner?
-              <button name="attends_submit">Save</button>
-            {{else}}
+              <button name="attends_submit" class="save">SAVE!!!!!!</button>
+              {{else}}
               Planned attendance (an underestimate!)
-            {{end}}
-          </th>
-          {{range $dayindex, $attendance := .TotalAttendance}}
-          <td>
-            {{if $.Authorized}}
+              {{end}}
+            </th>
+            {{range $dayindex := $days}}
+            <td>
+              {{if $.Authorized}}
               <input type="checkbox" name="attend/{{$dayindex}}" value="true"
-              {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
+                                                                 {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
+              {{end}}
+              {{index $.TotalAttendance $dayindex}}
+            </td>
             {{end}}
-            {{$attendance}}
-          </td>
-          {{end}}
-        </tr>
-      </table>
+          </tr>
+        </table>
+      </div>
+    {{end}}
     </form>
-    </div>
   </body>
 </html>
