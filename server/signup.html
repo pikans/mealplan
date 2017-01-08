@@ -1,5 +1,9 @@
 <html>
   <head>
+    <script
+src="https://code.jquery.com/jquery-3.1.1.min.js"
+integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+crossorigin="anonymous"></script>
   <title>Mealplan Signup</title>
   <style>
 table {
@@ -34,11 +38,30 @@ h2 {
 .attendance-row > td, .attendance-row > th {
   border: none;
 }
-.save {
+.warning {
   color: blue;
   background-color: yellow;
 }
   </style>
+  <script type="text/javascript">
+    var changed = false;
+$().ready(function(){
+  window.onbeforeunload = function(e) {
+    if (changed) {
+      var message = "You have unsaved attendance changes. Are you sure you want to leave?";
+      e.returnValue = message;
+      return message;
+    }
+  };
+  $("input:checkbox").change(function() {
+    changed = true;
+    $(".save").addClass("warning");
+  });
+  $("form").submit(function() {
+    changed = false;
+  });
+});
+  </script>
   </head>
   <body>
     <h1>IAP Mealplan</h1>
@@ -65,9 +88,9 @@ h2 {
               <td>
               {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
               {{if $assignee}}
-              {{if ne $assignee "_"}}
-              <button disabled>{{$assignee}}</button>
-              {{end}}
+                {{if ne $assignee "_"}}
+                <button disabled>{{$assignee}}</button>
+                {{end}}
               {{else if $.Authorized}}
               <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
               {{end}}
@@ -79,7 +102,7 @@ h2 {
             <th>
               {{if $.Authorized}}
               Will you be at dinner?
-              <button name="attends_submit" class="save">SAVE!!!!!!</button>
+              <button name="attends_submit" class="save">SAVE</button>
               {{else}}
               Planned attendance (an underestimate!)
               {{end}}
