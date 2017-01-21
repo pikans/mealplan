@@ -37,6 +37,14 @@ td {
         {{end}}
       </tr>
       {{end}}
+      <tr>
+        <td>planned attendance</td>
+        {{range $dayindex, $people := $.Attendance}}
+        <td>
+          {{$people}}
+        </td>
+        {{end}}
+      </tr>
     </table>
     <input type="hidden" name="oldversion" value="{{.VersionID}}"/>
     <button name="save">Save!</button>

@@ -15,20 +15,25 @@ var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 // deserializes the entire state into / out of a single file, rather than making use of a full-blown
 // database.
 type Data struct {
-	DayNames          []string
+	Days              []string
 	Assignments       map[string][]string
 	PlannedAttendance map[string][]bool
 	VersionID         string
 }
 
-// Make the list of days of the current period (currently hardcoded for IAP)
-func makeDayNames() []string {
+func GetDateRange() (startDate time.Time, endDate time.Time) {
 	EST, err := time.LoadLocation("America/New_York")
 	if err != nil {
 		panic(err)
 	}
-	startDate := time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
-	endDate := time.Date(2017, 2, 12, 0, 0, 0, 0, EST)
+	startDate = time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
+	endDate = time.Date(2017, 2, 12, 0, 0, 0, 0, EST)
+	return
+}
+
+// Make the list of days of the current period (currently hardcoded for IAP)
+func makeDayNames() []string {
+	startDate, endDate := GetDateRange()
 	days := []string{}
 	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
 		days = append(days, date.Format("Monday (1/2)"))
@@ -70,13 +75,13 @@ func ReadData(dataFile string) (*Data, error) {
 		err := dec.Decode(data)
 		// If we've extended the number of days, or this is a fresh file: add blank assignments to fill
 		for _, duty := range Duties {
-			for len(data.Assignments[duty]) < len(data.DayNames) {
+			for len(data.Assignments[duty]) < len(data.Days) {
 				data.Assignments[duty] = append(data.Assignments[duty], "")
 			}
 		}
 		// Also extend planned attendance data
 		for person := range data.PlannedAttendance {
-			for len(data.PlannedAttendance[person]) < len(data.DayNames) {
+			for len(data.PlannedAttendance[person]) < len(data.Days) {
 				data.PlannedAttendance[person] = append(data.PlannedAttendance[person], false)
 			}
 		}
@@ -112,7 +117,7 @@ func randomVersion() string {
 // Returns, for each day, how many people have indicated they want to come.
 func (data *Data) ComputeTotalAttendance() []int {
 	totals := []int{}
-	for dayindex := range data.DayNames {
+	for dayindex := range data.Days {
 		total := 0
 		for _, attends := range data.PlannedAttendance {
 			if attends[dayindex] {

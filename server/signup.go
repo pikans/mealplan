@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/daniel-ziegler/mealplan/moira"
 
@@ -30,6 +31,7 @@ type DisplayData struct {
 	Weeks                        [][]int
 	CurrentUserPlannedAttendance []bool
 	TotalAttendance              []int
+	Attendance                   [][]string
 	Assignments                  map[string][]string
 	VersionID                    string
 }
@@ -42,7 +44,29 @@ func makeWeeks(nrDays int) [][]int {
 		}
 		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], i)
 	}
-	return weeks
+	startDate, _ := GetDateRange()
+	hoursIn := time.Now().Sub(startDate).Hours()
+	weeksIn := int((hoursIn + 1) / 24 / 7)
+	if weeksIn > len(weeks)-1 {
+		weeksIn = len(weeks) - 1
+	}
+	remainingWeeks := weeks[weeksIn:]
+	return remainingWeeks
+}
+
+func makeAttendance(bools map[string][]bool) [][]string {
+	att := [][]string{}
+	for person, planned := range bools {
+		for len(att) < len(planned) {
+			att = append(att, []string{})
+		}
+		for i, p := range planned {
+			if p {
+				att[i] = append(att[i], person)
+			}
+		}
+	}
+	return att
 }
 
 func handleErr(w http.ResponseWriter, err error) {
@@ -71,8 +95,8 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		Duties:     Duties,
 		Authorized: false,
 		Username:   "",
-		DayNames:   currentData.DayNames,
-		Weeks:      makeWeeks(len(currentData.DayNames)),
+		DayNames:   currentData.Days,
+		Weeks:      makeWeeks(len(currentData.Days)),
 		CurrentUserPlannedAttendance: nil,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -109,7 +133,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("displaying for user %v", username)
 	plan, ok := currentData.PlannedAttendance[username]
 	if !ok {
-		plan = make([]bool, len(currentData.DayNames))
+		plan = make([]bool, len(currentData.Days))
 	}
 	for _, duty := range Duties {
 		// If duties contain slashes, the logic in claimHandler will break, because the button IDs use
@@ -122,8 +146,8 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		Duties:     Duties,
 		Authorized: true,
 		Username:   username,
-		DayNames:   currentData.DayNames,
-		Weeks:      makeWeeks(len(currentData.DayNames)),
+		DayNames:   currentData.Days,
+		Weeks:      makeWeeks(len(currentData.Days)),
 		CurrentUserPlannedAttendance: plan,
 		TotalAttendance:              currentData.ComputeTotalAttendance(),
 		Assignments:                  currentData.Assignments,
@@ -183,13 +207,13 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		if claimingSomething {
 			// Claim the duty
 			if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
-				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.DayNames[dayIndexClaimed])
+				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
 				ass[dayIndexClaimed] = username
 			}
 		}
 		// Also update planned attendance
-		plannedAttendance := make([]bool, len(currentData.DayNames))
-		for dayindex := range currentData.DayNames {
+		plannedAttendance := make([]bool, len(currentData.Days))
+		for dayindex := range currentData.Days {
 			vals := r.Form[fmt.Sprintf("attend/%d", dayindex)]
 			willAttend := len(vals) == 1 && vals[0] == "true"
 			plannedAttendance[dayindex] = willAttend
@@ -241,11 +265,12 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Duties:     Duties,
-		Authorized: true,
-		Username:   "",
-		DayNames:   currentData.DayNames,
-		Weeks:      makeWeeks(len(currentData.DayNames)),
+		Duties:                       Duties,
+		Authorized:                   true,
+		Username:                     "",
+		DayNames:                     currentData.Days,
+		Weeks:                        makeWeeks(len(currentData.Days)),
+		Attendance:                   makeAttendance(currentData.PlannedAttendance),
 		CurrentUserPlannedAttendance: nil,
 		Assignments:                  currentData.Assignments,
 		VersionID:                    currentData.VersionID, // Store the version in a hidden field
