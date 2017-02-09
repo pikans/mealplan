@@ -30,7 +30,7 @@ func GetDateRange() (startDate time.Time, endDate time.Time) {
 		panic(err)
 	}
 	startDate = time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
-	endDate = time.Date(2017, 2, 12, 0, 0, 0, 0, EST)
+	endDate = time.Date(2017, 2, 17, 0, 0, 0, 0, EST)
 	return
 }
 
@@ -82,6 +82,10 @@ func ReadData(dataFile string) (*Data, error) {
 		data := new(Data)
 		dec := gob.NewDecoder(file)
 		err := dec.Decode(data)
+		if err != nil {
+			return nil, err
+		}
+		data.Days = makeDayNames() // overwrite
 		// If we've extended the number of days, or this is a fresh file: add blank assignments to fill
 		for _, duty := range Duties {
 			for len(data.Assignments[duty]) < len(data.Days) {
