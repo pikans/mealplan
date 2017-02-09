@@ -8,14 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/daniel-ziegler/mealplan/moira"
 
 	. "github.com/daniel-ziegler/mealplan"
 )
-
-const dataFile = "signups.dat"
 
 // Use a mutex to prevent concurrent access to the data file.
 // It's a bit unfortunate to control access to a file system resource using an in-memory mutex in
@@ -44,9 +41,7 @@ func makeWeeks(nrDays int) [][]int {
 		}
 		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], i)
 	}
-	startDate, _ := GetDateRange()
-	hoursIn := time.Now().Sub(startDate).Hours()
-	weeksIn := int((hoursIn + 1) / 24 / 7)
+	weeksIn := DaysIn() / 7
 	if weeksIn > len(weeks)-1 {
 		weeksIn = len(weeks) - 1
 	}
@@ -86,7 +81,7 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dataLock.Lock()
 	defer dataLock.Unlock()
-	currentData, err := ReadData(dataFile)
+	currentData, err := ReadData(DataFile)
 	if err != nil {
 		handleErr(w, err)
 		return
@@ -120,7 +115,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dataLock.Lock()
 	defer dataLock.Unlock()
-	currentData, err := ReadData(dataFile)
+	currentData, err := ReadData(DataFile)
 	if err != nil {
 		handleErr(w, err)
 		return
@@ -198,7 +193,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 
 		dataLock.Lock()
 		defer dataLock.Unlock()
-		currentData, err := ReadData(dataFile)
+		currentData, err := ReadData(DataFile)
 		if err != nil {
 			handleErr(w, err)
 			return
@@ -220,7 +215,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		currentData.PlannedAttendance[username] = plannedAttendance
 
-		err = WriteData(dataFile, currentData)
+		err = WriteData(DataFile, currentData)
 		if err != nil {
 			handleErr(w, err)
 			return
@@ -259,7 +254,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	dataLock.Lock()
 	defer dataLock.Unlock()
-	currentData, err := ReadData(dataFile)
+	currentData, err := ReadData(DataFile)
 	if err != nil {
 		handleErr(w, err)
 		return
@@ -290,7 +285,7 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	dataLock.Lock()
 	defer dataLock.Unlock()
-	currentData, err := ReadData(dataFile)
+	currentData, err := ReadData(DataFile)
 	if err != nil {
 		handleErr(w, err)
 		return
@@ -309,7 +304,7 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 			currentData.Assignments[duty][dayindex] = r.FormValue(fmt.Sprintf("assignee/%v/%v", duty, dayindex))
 		}
 	}
-	if err = WriteData(dataFile, currentData); err != nil {
+	if err = WriteData(DataFile, currentData); err != nil {
 		handleErr(w, err)
 		return
 	}

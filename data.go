@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// default
+const DataFile = "signups.dat"
+
 // The list of duties (currently hard-coded)
 var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2"}
 
@@ -29,6 +32,12 @@ func GetDateRange() (startDate time.Time, endDate time.Time) {
 	startDate = time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
 	endDate = time.Date(2017, 2, 12, 0, 0, 0, 0, EST)
 	return
+}
+
+func DaysIn() int {
+	startDate, _ := GetDateRange()
+	hoursIn := time.Now().Sub(startDate).Hours()
+	return int(hoursIn / 24)
 }
 
 // Make the list of days of the current period (currently hardcoded for IAP)
