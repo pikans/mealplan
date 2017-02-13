@@ -17,7 +17,7 @@ You'll also need SSH keys for root on `pika-web.mit.edu` -- ask yfncc.
 1. Make sure you're in the `server` directory
 2. Build for OpenBSD: `env GOOS=openbsd GOARCH=amd64 go build`
 3. Copy the resulting `server` binary to the cdist repo, at `cdist/conf/manifest/bin/openbsd/mealplan`, and copy `server.html` and `admin.html` (if changed) into `cdist/conf/manifest/html/`
-4. Navigate up to `cdist/` in the cdist repo and run `./bin/cdist config -v pika-web.mit.edu`
+4. Navigate up to `yfncc-cdist/` in the cdist repo and run `./bin/cdist config -v pika-web.mit.edu`
 5. (If the binary changed) SSH into `pika-web.mit.edu` and restart the server:
   1. `su mealplan` to change into user `mealplan`
   2. `tmux attach` to attach to an existing `tmux` session, or just `tmux` to start a new one
