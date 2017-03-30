@@ -64,7 +64,7 @@ $().ready(function(){
   </script>
   </head>
   <body>
-    <h1>IAP Mealplan</h1>
+    <h1>Spring Mealplan</h1>
     <p class="note">NOTE: If you'd like to change your assignment or have swapped with someone, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
     {{if .Authorized}}
       <p style="font-style: italic;">Hi, {{.Username}}</p>
@@ -98,7 +98,7 @@ $().ready(function(){
             {{end}}
           </tr>
           {{end}}
-          <tr class="attendance-row">
+         <!-- <tr class="attendance-row">
             <th>
               {{if $.Authorized}}
               Will you be at dinner?
@@ -115,7 +115,7 @@ $().ready(function(){
               {{end}}
               {{index $.TotalAttendance $dayindex}}
             </td>
-            {{end}}
+            {{end}} -->
           </tr>
         </table>
       </div>

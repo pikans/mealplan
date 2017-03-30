@@ -12,7 +12,7 @@ import (
 const DataFile = "signups.dat"
 
 // The list of duties (currently hard-coded)
-var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2", "Tiny Cook","Fridge Ninja","Deep Cleaner"}
+var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2", "Cleaner 3","Fridge Ninja"}
 
 // The data that is stored on disk. For "simplicity", the application just serializes and
 // deserializes the entire state into / out of a single file, rather than making use of a full-blown
@@ -30,7 +30,7 @@ func GetDateRange() (startDate time.Time, endDate time.Time) {
 		panic(err)
 	}
 	startDate = time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
-	endDate = time.Date(2017, 4, 2, 0, 0, 0, 0, EST)
+	endDate = time.Date(2017, 5, 21, 0, 0, 0, 0, EST)
 	return
 }
 
