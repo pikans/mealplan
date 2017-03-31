@@ -12,7 +12,7 @@ import (
 const DataFile = "signups.dat"
 
 // The list of duties (currently hard-coded)
-var Duties = []string{"Big cook", "Little cook", "Cleaner 1", "Cleaner 2", "Cleaner 3","Fridge Ninja"}
+var Duties = []string{"Big cook", "Little cook","Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3","Fridge Ninja"}
 
 // The data that is stored on disk. For "simplicity", the application just serializes and
 // deserializes the entire state into / out of a single file, rather than making use of a full-blown
