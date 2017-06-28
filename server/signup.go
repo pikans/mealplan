@@ -23,13 +23,13 @@ var dataLock sync.Mutex
 type DisplayData struct {
 	Duties                       []string
 	Authorized                   bool
-	Username                     string
+	Username                     moira.Username
 	DayNames                     []string
 	Weeks                        [][]int
 	CurrentUserPlannedAttendance []bool
 	TotalAttendance              []int
-	Attendance                   [][]string
-	Assignments                  map[string][]string
+	Attendance                   [][]moira.Username
+	Assignments                  map[string][]moira.Username
 	VersionID                    string
 }
 
@@ -49,11 +49,11 @@ func makeWeeks(nrDays int) [][]int {
 	return remainingWeeks
 }
 
-func makeAttendance(bools map[string][]bool) [][]string {
-	att := [][]string{}
+func makeAttendance(bools map[moira.Username][]bool) [][]moira.Username {
+	att := [][]moira.Username{}
 	for person, planned := range bools {
 		for len(att) < len(planned) {
-			att = append(att, []string{})
+			att = append(att, []moira.Username{})
 		}
 		for i, p := range planned {
 			if p {
@@ -120,7 +120,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		handleErr(w, err)
 		return
 	}
-	username := getTrimmedUsername(r)
+	username := getAuthedUsername(r)
 	if username == "" {
 		http.Error(w, "No username", http.StatusUnauthorized)
 		return
@@ -155,10 +155,9 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Returns either a Kerberos username (with @mit.edu trimmed off) or a whole email
-func getTrimmedUsername(r *http.Request) string {
-	username := r.Header.Get("proxy-authenticated-email")
-	return strings.TrimSuffix(username, "@mit.edu")
+func getAuthedUsername(r *http.Request) moira.Username {
+	email := moira.Email(r.Header.Get("proxy-authenticated-email"))
+	return moira.UsernameFromEmail(email)
 }
 
 // This handler runs when users submit the form (by clicking Save or a duty-claiming button).
@@ -186,7 +185,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		username := getTrimmedUsername(r)
+		username := getAuthedUsername(r)
 		if username == "" {
 			http.Error(w, "No username", http.StatusUnauthorized)
 		}
@@ -228,7 +227,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 // Authorizes the user as admin (must be on yfnkm); aborts the request with 403 Forbidden if not.
 // Returns whether authorization succeeded.
 func adminAuth(w http.ResponseWriter, r *http.Request) bool {
-	username := r.Header.Get("proxy-authenticated-email")
+	username := getAuthedUsername(r)
 	if username == "" {
 		http.Error(w, "No username", http.StatusUnauthorized)
 		return false
@@ -301,7 +300,7 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, duty := range Duties {
 		for dayindex := range currentData.Assignments[duty] {
-			currentData.Assignments[duty][dayindex] = r.FormValue(fmt.Sprintf("assignee/%v/%v", duty, dayindex))
+			currentData.Assignments[duty][dayindex] = moira.Username(r.FormValue(fmt.Sprintf("assignee/%v/%v", duty, dayindex)))
 		}
 	}
 	if err = WriteData(DataFile, currentData); err != nil {

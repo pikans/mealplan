@@ -18,7 +18,7 @@ import (
 
 var deprecatedRSAIncEmailAddressForUseInSignatures = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
 
-func getMITCertEmailAddressFullName(chains [][]*x509.Certificate) (string, string, error) {
+func getMITCertEmailAddressFullName(chains [][]*x509.Certificate) (moira.Email, string, error) {
 	if len(chains) == 0 {
 		return "", "", errors.New("a client certificate is required to use this service, but no verified certificate chains")
 	}
@@ -32,7 +32,7 @@ func getMITCertEmailAddressFullName(chains [][]*x509.Certificate) (string, strin
 				continue
 			}
 			if email, ok := name.Value.(string); ok {
-				return email, cert.Subject.CommonName, nil
+				return moira.Email(email), cert.Subject.CommonName, nil
 			}
 		}
 	}
@@ -65,11 +65,11 @@ func run(handler http.Handler, unauthHandler http.Handler, register, listenhttp,
 		if err != nil {
 			return err
 		}
-		if err := moira.IsAuthorized(authorize, email); err != nil {
+		if err := moira.IsAuthorized(authorize, moira.UsernameFromEmail(email)); err != nil {
 			return err
 		}
 		req.Header.Set("proxy-authenticated-full-name", fullname)
-		req.Header.Set("proxy-authenticated-email", strings.ToLower(email))
+		req.Header.Set("proxy-authenticated-email", strings.ToLower(string(email)))
 		return nil
 	}
 

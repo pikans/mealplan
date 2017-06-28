@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-	"strings"
 
 	"gopkg.in/ldap.v2"
 )
@@ -36,20 +35,16 @@ func GetMoiraNFSGroupMembers(nfsgroup string) ([]string, error) {
 	return sr.Entries[0].GetAttributeValues("member"), nil
 }
 
-func IsAuthorized(authorize string, email string) error {
-	email = strings.ToLower(email)
-
+func IsAuthorized(authorize string, u Username) error {
 	members, err := GetMoiraNFSGroupMembers(authorize)
 	if err != nil {
 		return err
 	}
 
 	// USER entries -- MIT kerberos accounts
-	at_mit_edu := "@mit.edu"
-	if strings.HasSuffix(email, at_mit_edu) && strings.Count(email, "@") == 1 {
-		kerberos := strings.TrimSuffix(email, at_mit_edu)
+	if u.IsKerberos() {
 		for _, member := range members {
-			if member == "uid="+kerberos+",OU=users,OU=moira,dc=MIT,dc=EDU" {
+			if member == "uid="+string(u)+",OU=users,OU=moira,dc=MIT,dc=EDU" {
 				return nil
 			}
 		}
@@ -57,10 +52,10 @@ func IsAuthorized(authorize string, email string) error {
 
 	// STRING entries -- full email addresses
 	for _, member := range members {
-		if member == "cn="+email+",OU=strings,OU=moira,dc=MIT,dc=EDU" {
+		if member == "cn="+string(u.Email())+",OU=strings,OU=moira,dc=MIT,dc=EDU" {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("authenticated as %q, but not authorized because not on moira list %q", email, authorize)
+	return fmt.Errorf("authenticated as %q, but not authorized because not on moira list %q", u.Email(), authorize)
 }

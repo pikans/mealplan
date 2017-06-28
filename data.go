@@ -6,21 +6,23 @@ import (
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/daniel-ziegler/mealplan/moira"
 )
 
 // default
 const DataFile = "signups.dat"
 
 // The list of duties (currently hard-coded)
-var Duties = []string{"Big cook", "Little cook","Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3","Fridge Ninja"}
+var Duties = []string{"Big cook", "Little cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3", "Fridge Ninja"}
 
 // The data that is stored on disk. For "simplicity", the application just serializes and
 // deserializes the entire state into / out of a single file, rather than making use of a full-blown
 // database.
 type Data struct {
 	Days              []string
-	Assignments       map[string][]string
-	PlannedAttendance map[string][]bool
+	Assignments       map[string][]moira.Username
+	PlannedAttendance map[moira.Username][]bool
 	VersionID         string
 }
 
@@ -52,12 +54,12 @@ func makeDayNames() []string {
 
 // Make the empty state: no assignments, no planned attendance
 func emptyData() *Data {
-	assignments := make(map[string][]string)
+	assignments := make(map[string][]moira.Username)
 	days := makeDayNames()
 	for _, duty := range Duties {
-		assignments[duty] = make([]string, len(days))
+		assignments[duty] = make([]moira.Username, len(days))
 	}
-	plannedAttendance := map[string][]bool{}
+	plannedAttendance := map[moira.Username][]bool{}
 	return &Data{
 		days,
 		assignments,
