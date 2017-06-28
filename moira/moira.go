@@ -4,12 +4,13 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"strings"
 
 	"gopkg.in/ldap.v2"
 )
 
 // nfsgroup MUST match [a-z0-9-] (no LDAP quoting is done)
-func GetMoiraNFSGroupMembers(nfsgroup string) ([]string, error) {
+func GetMoiraNFSGroupMemberStrings(nfsgroup string) ([]string, error) {
 	l, err := ldap.DialTLS("tcp", "ldap.mit.edu:636", &tls.Config{ServerName: "ldap.mit.edu"})
 	if err != nil {
 		log.Print(err)
@@ -35,27 +36,45 @@ func GetMoiraNFSGroupMembers(nfsgroup string) ([]string, error) {
 	return sr.Entries[0].GetAttributeValues("member"), nil
 }
 
-func IsAuthorized(authorize string, u Username) error {
-	members, err := GetMoiraNFSGroupMembers(authorize)
+func extractPart(prefix, suffix, str string) (string, bool) {
+	// the first condition is necessary in case of potentially overlapping prefix & suffix
+	if len(str) >= len(prefix)+len(suffix) && strings.HasPrefix(str, prefix) && strings.HasSuffix(str, suffix) {
+		return str[len(prefix) : len(str)-len(suffix)], true
+	} else {
+		return "", false
+	}
+}
+
+func GetMoiraNFSGroupMembers(nfsgroup string) ([]Username, error) {
+	members, err := GetMoiraNFSGroupMemberStrings(nfsgroup)
+	if err != nil {
+		return nil, err
+	}
+
+	usernames := []Username{}
+	for _, member := range members {
+		if kerberos, ok := extractPart("uid=", ",OU=users,OU=moira,dc=MIT,dc=EDU", member); ok {
+			usernames = append(usernames, UsernameFromKerberos(kerberos))
+		} else if email, ok := extractPart("cn=", ",OU=strings,OU=moira,dc=MIT,dc=EDU", member); ok {
+			usernames = append(usernames, UsernameFromEmail(Email(email)))
+		}
+		// ignore other entries
+	}
+
+	return usernames, nil
+}
+
+func IsAuthorized(authorize string, user Username) error {
+	users, err := GetMoiraNFSGroupMembers(authorize)
 	if err != nil {
 		return err
 	}
 
-	// USER entries -- MIT kerberos accounts
-	if u.IsKerberos() {
-		for _, member := range members {
-			if member == "uid="+string(u)+",OU=users,OU=moira,dc=MIT,dc=EDU" {
-				return nil
-			}
-		}
-	}
-
-	// STRING entries -- full email addresses
-	for _, member := range members {
-		if member == "cn="+string(u.Email())+",OU=strings,OU=moira,dc=MIT,dc=EDU" {
+	for _, u := range users {
+		if u == user {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("authenticated as %q, but not authorized because not on moira list %q", u.Email(), authorize)
+	return fmt.Errorf("authenticated as %q, but not authorized because not on moira list %q", user.Email(), authorize)
 }

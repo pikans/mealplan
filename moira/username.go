@@ -13,6 +13,10 @@ func UsernameFromEmail(email Email) Username {
 	return Username(strings.TrimSuffix(strings.ToLower(string(email)), KERBEROS_SUFFIX))
 }
 
+func UsernameFromKerberos(kerberos string) Username {
+	return Username(kerberos)
+}
+
 func (u Username) IsKerberos() bool {
 	return !strings.ContainsRune(string(u), '@')
 }
