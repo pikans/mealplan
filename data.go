@@ -13,6 +13,8 @@ import (
 // default
 const DataFile = "signups.dat"
 
+const DateFormat = "Monday (1/2)"
+
 // The list of duties (currently hard-coded)
 var Duties = []string{"Big cook", "Little cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3", "Fridge Ninja"}
 
@@ -47,7 +49,7 @@ func makeDayNames() []string {
 	startDate, endDate := GetDateRange()
 	days := []string{}
 	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
-		days = append(days, date.Format("Monday (1/2)"))
+		days = append(days, date.Format(DateFormat))
 	}
 	return days
 }

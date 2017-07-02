@@ -1,0 +1,37 @@
+<html>
+  <head>
+  <title>Stats</title>
+<style>
+table {
+  border-collapse: collapse;
+}
+th {
+  padding: 4px 8px;
+  width: 12em;
+}
+td {
+  padding: 8;
+  border: 1px solid black;
+    text-align: center;
+}
+</style>
+  </head>
+  <body>
+  <h1>Stats</h1>
+  <h2>Showing signups since: {{.Since}}</h2>
+  <table>
+    <tr>
+      <th>Username</th>
+      <th># of signups</th>
+      <th>Signups</th>
+    </tr>
+    {{range $person := .People}}
+    <tr>
+      <td>{{$person.Username}}</td>
+      <td>{{len $person.Signups}}</td>
+      <td>{{range $person.Signups}}{{.Duty}}&nbsp;-&nbsp;{{.Date}}; {{end}}</td>
+    </tr>
+    {{end}}
+  </table>
+  </body>
+</html>

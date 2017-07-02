@@ -5,9 +5,11 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/daniel-ziegler/mealplan/moira"
 
@@ -312,6 +314,96 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin", http.StatusFound)
 }
 
+type Signup struct {
+	Date, Duty string
+}
+
+type PersonStats struct {
+	Signups  []Signup
+	Username moira.Username
+}
+
+type BySignupCount []PersonStats
+
+func (s BySignupCount) Len() int {
+	return len(s)
+}
+func (s BySignupCount) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s BySignupCount) Less(i, j int) bool {
+	return len(s[i].Signups) < len(s[j].Signups)
+}
+
+type StatsData struct {
+	People []PersonStats
+	Since  time.Time
+}
+
+func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
+	if !adminAuth(w, r) {
+		return
+	}
+
+	t, err := template.ParseFiles("stats.html")
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+	dataLock.Lock()
+	defer dataLock.Unlock()
+	currentData, err := ReadData(DataFile)
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+
+	authorize := r.Header.Get("proxy-authorized-list")
+	users, err := moira.GetMoiraNFSGroupMembers(authorize)
+	if err != nil {
+		handleErr(w, err)
+		return
+	}
+
+	stats := map[moira.Username]PersonStats{}
+	for _, u := range users {
+		stats[u] = PersonStats{Signups: []Signup{}, Username: u}
+	}
+
+	EST, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		panic(err)
+	}
+	since := time.Date(2017, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
+
+	startDate, _ := GetDateRange()
+	for dayindex, dayname := range currentData.Days {
+		date := startDate.AddDate(0, 0, dayindex)
+		if date.Equal(since) || date.After(since) {
+			for _, duty := range Duties {
+				if dayindex < len(currentData.Assignments[duty]) {
+					u := currentData.Assignments[duty][dayindex]
+					if u != "" && u != "_" {
+						stats[u] = PersonStats{append(stats[u].Signups, Signup{dayname, duty}), u}
+					}
+				}
+			}
+		}
+	}
+
+	d := StatsData{People: []PersonStats{}, Since: since}
+	for _, s := range stats {
+		d.People = append(d.People, s)
+	}
+	sort.Sort(BySignupCount(d.People))
+
+	err = t.Execute(w, d)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // This is the overall handler which decides, for authorized users, which page to display.
 func getHandler() http.Handler {
 	mux := http.NewServeMux()
@@ -319,6 +411,7 @@ func getHandler() http.Handler {
 	mux.HandleFunc("/claim", claimHandler)
 	mux.HandleFunc("/admin", adminHandler)
 	mux.HandleFunc("/adminSave", adminSaveHandler)
+	mux.HandleFunc("/stats", adminStatsHandler)
 	return mux
 }
 

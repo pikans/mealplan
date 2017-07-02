@@ -68,6 +68,7 @@ func run(handler http.Handler, unauthHandler http.Handler, register, listenhttp,
 		if err := moira.IsAuthorized(authorize, moira.UsernameFromEmail(email)); err != nil {
 			return err
 		}
+		req.Header.Set("proxy-authorized-list", authorize)
 		req.Header.Set("proxy-authenticated-full-name", fullname)
 		req.Header.Set("proxy-authenticated-email", strings.ToLower(string(email)))
 		return nil
