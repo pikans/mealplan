@@ -226,19 +226,22 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// Authorizes the user as admin (must be on yfnkm); aborts the request with 403 Forbidden if not.
-// Returns whether authorization succeeded.
+// Authorizes the user as admin (must be on yfnkm or yfncc); aborts the request
+// with 403 Forbidden if not.  Returns whether authorization succeeded.
 func adminAuth(w http.ResponseWriter, r *http.Request) bool {
 	username := getAuthedUsername(r)
 	if username == "" {
 		http.Error(w, "No username", http.StatusUnauthorized)
 		return false
 	}
-	if err := moira.IsAuthorized("yfnkm", username); err != nil {
-		http.Error(w, fmt.Sprintf("Not an admin: %v", username), http.StatusForbidden)
-		return false
+	if err := moira.IsAuthorized("yfnkm", username); err == nil {
+		return true
 	}
-	return true
+	if err := moira.IsAuthorized("yfncc", username); err == nil {
+		return true
+	}
+	http.Error(w, fmt.Sprintf("Not an admin (yfnkm or yfncc): %v", username), http.StatusForbidden)
+	return false
 }
 
 // This handler displays the secret admin interface, which displays a bunch of textboxes rather than
