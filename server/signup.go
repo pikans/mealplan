@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/daniel-ziegler/mealplan/moira"
+	"github.com/pikans/mealplan/moira"
 
-	. "github.com/daniel-ziegler/mealplan"
+	. "github.com/pikans/mealplan"
 )
 
 // Use a mutex to prevent concurrent access to the data file.

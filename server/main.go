@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	"strings"
 
-	"github.com/daniel-ziegler/mealplan/moira"
+	"github.com/pikans/mealplan/moira"
 )
 
 var deprecatedRSAIncEmailAddressForUseInSignatures = asn1.ObjectIdentifier{1, 2, 840, 113549, 1, 9, 1}
