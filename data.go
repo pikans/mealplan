@@ -33,8 +33,8 @@ func GetDateRange() (startDate time.Time, endDate time.Time) {
 	if err != nil {
 		panic(err)
 	}
-	startDate = time.Date(2017, 1, 2, 0, 0, 0, 0, EST)
-	endDate = time.Date(2018, 5, 20, 0, 0, 0, 0, EST)
+	startDate = time.Date(2018, 5, 2, 0, 0, 0, 0, EST)
+	endDate = time.Date(2018, 5, 27, 0, 0, 0, 0, EST)
 	return
 }
 
