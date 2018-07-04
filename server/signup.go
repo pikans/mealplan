@@ -28,9 +28,6 @@ type DisplayData struct {
 	Username                     moira.Username
 	DayNames                     []string
 	Weeks                        [][]int
-	CurrentUserPlannedAttendance []bool
-	TotalAttendance              []int
-	Attendance                   [][]moira.Username
 	Assignments                  map[string][]moira.Username
 	VersionID                    string
 }
@@ -51,28 +48,13 @@ func makeWeeks(nrDays int) [][]int {
 	return remainingWeeks
 }
 
-func makeAttendance(bools map[moira.Username][]bool) [][]moira.Username {
-	att := [][]moira.Username{}
-	for person, planned := range bools {
-		for len(att) < len(planned) {
-			att = append(att, []moira.Username{})
-		}
-		for i, p := range planned {
-			if p {
-				att[i] = append(att[i], person)
-			}
-		}
-	}
-	return att
-}
-
 func handleErr(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	log.Printf("%s\n", err)
 }
 
 // This handler runs for unauthorized users (no certs / not on pika-food).
-// It displays all the claimed duties and the indicated attendance counts, but doesn't display
+// It displays all the claimed duties, but doesn't display
 // buttons or checkboxes for the users to make any changes. (This is taken care of in signup.html,
 // which checks .Authorized on the data to check whether the user is authorized or not.)
 func unauthHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,15 +71,13 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Duties:     Duties,
-		Authorized: false,
-		Username:   "",
-		DayNames:   currentData.Days,
-		Weeks:      makeWeeks(len(currentData.Days)),
-		CurrentUserPlannedAttendance: nil,
-		TotalAttendance:              currentData.ComputeTotalAttendance(),
-		Assignments:                  currentData.Assignments,
-		VersionID:                    currentData.VersionID,
+		Duties:      Duties,
+		Authorized:  false,
+		Username:    "",
+		DayNames:    currentData.Days,
+		Weeks:       makeWeeks(len(currentData.Days)),
+		Assignments: currentData.Assignments,
+		VersionID:   currentData.VersionID,
 	}
 	err = t.Execute(w, d)
 	if err != nil {
@@ -107,8 +87,7 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // This handler displays the main signup page for authorized users (certs & on pika-food).
-// It displays buttons and checkboxes to enable the user to claim duties and indicate the days they
-// plan on attending dinner.
+// It displays buttons and checkboxes to enable the user to claim duties.
 func signupHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("signup.html")
 	if err != nil {
@@ -128,10 +107,6 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("displaying for user %v", username)
-	plan, ok := currentData.PlannedAttendance[username]
-	if !ok {
-		plan = make([]bool, len(currentData.Days))
-	}
 	for _, duty := range Duties {
 		// If duties contain slashes, the logic in claimHandler will break, because the button IDs use
 		// slashes as separators (see signup.html).
@@ -140,15 +115,13 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	d := DisplayData{
-		Duties:     Duties,
-		Authorized: true,
-		Username:   username,
-		DayNames:   currentData.Days,
-		Weeks:      makeWeeks(len(currentData.Days)),
-		CurrentUserPlannedAttendance: plan,
-		TotalAttendance:              currentData.ComputeTotalAttendance(),
-		Assignments:                  currentData.Assignments,
-		VersionID:                    currentData.VersionID,
+		Duties:      Duties,
+		Authorized:  true,
+		Username:    username,
+		DayNames:    currentData.Days,
+		Weeks:       makeWeeks(len(currentData.Days)),
+		Assignments: currentData.Assignments,
+		VersionID:   currentData.VersionID,
 	}
 	err = t.Execute(w, d)
 	if err != nil {
@@ -207,14 +180,6 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 				ass[dayIndexClaimed] = username
 			}
 		}
-		// Also update planned attendance
-		plannedAttendance := make([]bool, len(currentData.Days))
-		for dayindex := range currentData.Days {
-			vals := r.Form[fmt.Sprintf("attend/%d", dayindex)]
-			willAttend := len(vals) == 1 && vals[0] == "true"
-			plannedAttendance[dayindex] = willAttend
-		}
-		currentData.PlannedAttendance[username] = plannedAttendance
 
 		err = WriteData(DataFile, currentData)
 		if err != nil {
@@ -264,15 +229,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := DisplayData{
-		Duties:                       Duties,
-		Authorized:                   true,
-		Username:                     "",
-		DayNames:                     currentData.Days,
-		Weeks:                        makeWeeks(len(currentData.Days)),
-		Attendance:                   makeAttendance(currentData.PlannedAttendance),
-		CurrentUserPlannedAttendance: nil,
-		Assignments:                  currentData.Assignments,
-		VersionID:                    currentData.VersionID, // Store the version in a hidden field
+		Duties:      Duties,
+		Authorized:  true,
+		Username:    "",
+		DayNames:    currentData.Days,
+		Weeks:       makeWeeks(len(currentData.Days)),
+		Assignments: currentData.Assignments,
+		VersionID:   currentData.VersionID, // Store the version in a hidden field
 	}
 	err = t.Execute(w, d)
 	if err != nil {

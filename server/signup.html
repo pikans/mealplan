@@ -1,9 +1,5 @@
 <html>
   <head>
-    <script
-src="https://code.jquery.com/jquery-3.1.1.min.js"
-integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-crossorigin="anonymous"></script>
   <title>Mealplan Signup</title>
   <style>
 table {
@@ -35,36 +31,10 @@ h2 {
 .usual {
   text-decoration: line-through;
 }
-.attendance-row > td, .attendance-row > th {
-  border: none;
-}
-.warning {
-  color: blue;
-  background-color: yellow;
-}
   </style>
-  <script type="text/javascript">
-    var changed = false;
-$().ready(function(){
-  window.onbeforeunload = function(e) {
-    if (changed) {
-      var message = "You have unsaved attendance changes. Are you sure you want to leave?";
-      e.returnValue = message;
-      return message;
-    }
-  };
-  $("input:checkbox").change(function() {
-    changed = true;
-    $(".save").addClass("warning");
-  });
-  $("form").submit(function() {
-    changed = false;
-  });
-});
-  </script>
   </head>
   <body>
-    <h1>Spring Mealplan</h1>
+    <h1>pika mealplan</h1>
     <p class="note">NOTE: If you'd like to change your assignment or have swapped with someone, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
     {{if .Authorized}}
       <p style="font-style: italic;">Hi, {{.Username}}</p>
@@ -98,24 +68,6 @@ $().ready(function(){
             {{end}}
           </tr>
           {{end}}
-         <!-- <tr class="attendance-row">
-            <th>
-              {{if $.Authorized}}
-              Will you be at dinner?
-              <button name="attends_submit" class="save">SAVE</button>
-              {{else}}
-              Planned attendance (an underestimate!)
-              {{end}}
-            </th>
-            {{range $dayindex := $days}}
-            <td>
-              {{if $.Authorized}}
-              <input type="checkbox" name="attend/{{$dayindex}}" value="true"
-                                                                 {{if (index $.CurrentUserPlannedAttendance $dayindex)}}checked{{end}}/>
-              {{end}}
-              {{index $.TotalAttendance $dayindex}}
-            </td>
-            {{end}} -->
           </tr>
         </table>
       </div>
