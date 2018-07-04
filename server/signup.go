@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"net/smtp"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,13 +25,13 @@ var dataLock sync.Mutex
 
 // The data type which will be passed to the HTML template (signup.html).
 type DisplayData struct {
-	Duties                       []string
-	Authorized                   bool
-	Username                     moira.Username
-	DayNames                     []string
-	Weeks                        [][]int
-	Assignments                  map[string][]moira.Username
-	VersionID                    string
+	Duties      []string
+	Authorized  bool
+	Username    moira.Username
+	DayNames    []string
+	Weeks       [][]int
+	Assignments map[string][]moira.Username
+	VersionID   string
 }
 
 func makeWeeks(nrDays int) [][]int {
@@ -135,58 +137,110 @@ func getAuthedUsername(r *http.Request) moira.Username {
 	return moira.UsernameFromEmail(email)
 }
 
+func transact(f func(*Data) error) error {
+	dataLock.Lock()
+	defer dataLock.Unlock()
+
+	currentData, err := ReadData(DataFile)
+	if err != nil {
+		return err
+	}
+
+	if err := f(currentData); err != nil {
+		return err
+	}
+
+	return WriteData(DataFile, currentData)
+}
+
 // This handler runs when users submit the form (by clicking Save or a duty-claiming button).
 // It updates the on-disk data correspondingly, and then sends users back to the main page.
 func claimHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		r.ParseForm()
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	r.ParseForm()
 
-		// Find whether a duty was claimed, and if so, which one
-		var dutyClaimed string
-		var dayIndexClaimed int
-		var claimingSomething bool
-		for key := range r.Form {
-			splitKey := strings.Split(key, "/")
-			if len(splitKey) == 3 && splitKey[0] == "claim" {
-				claimingSomething = true
-				dutyClaimed = splitKey[1]
-				var err error
-				dayIndexClaimed, err = strconv.Atoi(splitKey[2])
-				if err != nil {
-					handleErr(w, err)
-					return
+	username := getAuthedUsername(r)
+	if username == "" {
+		http.Error(w, "No username", http.StatusUnauthorized)
+	}
+
+	// Find whether a duty was claimed, and if so, which one
+	for key := range r.Form {
+		splitKey := strings.Split(key, "/")
+		if len(splitKey) == 3 && splitKey[0] == "claim" {
+			duty := splitKey[1]
+			dayIndex, err := strconv.Atoi(splitKey[2])
+			if err != nil {
+				handleErr(w, err)
+				return
+			}
+			dayname := ""
+			err = transact(func(currentData *Data) error {
+				ass, ok := currentData.Assignments[duty]
+				if !(ok && dayIndex < len(ass)) {
+					return errors.New("no such duty")
 				}
+				if ass[dayIndex] != "" {
+					return errors.New("somebody else got this one already.")
+				}
+				ass[dayIndex] = username
+				dayname = currentData.Days[dayIndex]
+				return nil
+			})
+			if err != nil {
 				break
 			}
+			log.Printf("%v claimed %v/%v", username, duty, dayname)
+			break
 		}
-
-		username := getAuthedUsername(r)
-		if username == "" {
-			http.Error(w, "No username", http.StatusUnauthorized)
-		}
-
-		dataLock.Lock()
-		defer dataLock.Unlock()
-		currentData, err := ReadData(DataFile)
-		if err != nil {
-			handleErr(w, err)
-			return
-		}
-
-		if claimingSomething {
-			// Claim the duty
-			if ass, ok := currentData.Assignments[dutyClaimed]; ok && dayIndexClaimed < len(ass) && ass[dayIndexClaimed] == "" {
-				log.Printf("%v claimed %v/%v", username, dutyClaimed, currentData.Days[dayIndexClaimed])
-				ass[dayIndexClaimed] = username
+		if len(splitKey) == 3 && splitKey[0] == "abandon" {
+			duty := splitKey[1]
+			dayIndex, err := strconv.Atoi(splitKey[2])
+			if err != nil {
+				handleErr(w, err)
+				return
 			}
-		}
+			dayname := ""
+			err = transact(func(currentData *Data) error {
+				ass, ok := currentData.Assignments[duty]
+				if !(ok && dayIndex < len(ass)) {
+					return errors.New("no such duty")
+				}
+				if ass[dayIndex] != username {
+					return errors.New("not yours, no need to abandon it.")
+				}
+				ass[dayIndex] = ""
+				dayname = currentData.Days[dayIndex]
+				return nil
+			})
+			if err != nil {
+				break
+			}
 
-		err = WriteData(DataFile, currentData)
-		if err != nil {
-			handleErr(w, err)
-			return
+			log.Printf("%v abandoned %v/%v", username, duty, dayname)
+
+			err = smtp.SendMail(
+				"outgoing.mit.edu:smtp",
+				nil,
+				"yfnkm@mit.edu",
+				[]string{"yfnkm@mit.edu", fmt.Sprint(username.Email())},
+				[]byte(fmt.Sprintf(`From: "pika kitchen website" <yfnkm@mit.edu>
+To: yfnkm@mit.edu
+Cc: %s
+Subject: %s unclaimed %v/%v -- eom
+
+`, username.Email(), username, duty, dayname)))
+			if err != nil {
+				log.Printf("%v", err)
+			}
+
+			break
 		}
 	}
+
 	// Display the main page again
 	http.Redirect(w, r, "/", http.StatusFound)
 }

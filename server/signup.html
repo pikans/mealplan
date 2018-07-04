@@ -35,9 +35,8 @@ h2 {
   </head>
   <body>
     <h1>pika mealplan</h1>
-    <p class="note">NOTE: If you'd like to change your assignment or have swapped with someone, please email <a href="mailto:yfnkm@mit.edu">yfnkm@mit.edu</a> </p>
     {{if .Authorized}}
-      <p style="font-style: italic;">Hi, {{.Username}}</p>
+      <p style="font-style: italic;">Hi, {{.Username}}. The pika kitchen needs you!</p>
     {{else}}
       <p style="font-style: italic;">(Log in with a certificate if you want to claim a slot)</p>
     {{end}}
@@ -58,9 +57,12 @@ h2 {
               <td>
               {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
               {{if $assignee}}
-                {{if ne $assignee "_"}}
-                <button disabled>{{$assignee}}</button>
-                {{end}}
+		{{if eq $assignee $.Username}}
+		  <button title="You are currently signed up for this duty. Clicking this button undoes that, but also emails yfnkm and your consciousness." name="abandon/{{$duty}}/{{$dayindex}}">Abandon!</button>
+                {{else if eq $assignee "_"}}
+		{{else}}
+		  <button disabled>{{$assignee}}</button>
+		{{end}}
               {{else if $.Authorized}}
               <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
               {{end}}
