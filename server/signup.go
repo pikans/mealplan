@@ -322,7 +322,9 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, duty := range Duties {
 		for dayindex := range currentData.Assignments[duty] {
-			currentData.Assignments[duty][dayindex] = moira.Username(r.FormValue(fmt.Sprintf("assignee/%v/%v", duty, dayindex)))
+			if values, ok := r.Form[fmt.Sprintf("assignee/%v/%v", duty, dayindex)]; ok && len(values) != 0 {
+				currentData.Assignments[duty][dayindex] = moira.Username(values[0])
+			}
 		}
 	}
 	if err = WriteData(DataFile, currentData); err != nil {
@@ -394,12 +396,13 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	since := time.Date(2018, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
+
+	mealplanStartDate := time.Date(2018, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
 
 	startDate, _ := GetDateRange()
 	for dayindex, dayname := range currentData.Days {
 		date := startDate.AddDate(0, 0, dayindex)
-		if date.Equal(since) || date.After(since) {
+		if date.Equal(mealplanStartDate) || date.After(mealplanStartDate) {
 			for _, duty := range Duties {
 				if dayindex < len(currentData.Assignments[duty]) {
 					u := currentData.Assignments[duty][dayindex]
@@ -411,7 +414,7 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	d := StatsData{People: []PersonStats{}, Since: since}
+	d := StatsData{People: []PersonStats{}, Since: mealplanStartDate}
 	for _, s := range stats {
 		// if len(s.Signups) != 0 {
 		d.People = append(d.People, s)

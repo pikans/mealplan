@@ -24,7 +24,7 @@ var Duties = []string{"Big cook", "Little cook", "Tiny Cook", "Cleaner 1", "Clea
 type Data struct {
 	Days              []string
 	Assignments       map[string][]moira.Username
-	PlannedAttendance map[moira.Username][]bool
+	//removed: PlannedAttendance map[moira.Username][]bool
 	VersionID         string
 }
 
@@ -54,18 +54,16 @@ func makeDayNames() []string {
 	return days
 }
 
-// Make the empty state: no assignments, no planned attendance
+// Make the empty state: no assignments
 func emptyData() *Data {
 	assignments := make(map[string][]moira.Username)
 	days := makeDayNames()
 	for _, duty := range Duties {
 		assignments[duty] = make([]moira.Username, len(days))
 	}
-	plannedAttendance := map[moira.Username][]bool{}
 	return &Data{
 		days,
 		assignments,
-		plannedAttendance,
 		randomVersion(),
 	}
 }
@@ -96,12 +94,6 @@ func ReadData(dataFile string) (*Data, error) {
 				data.Assignments[duty] = append(data.Assignments[duty], "")
 			}
 		}
-		// Also extend planned attendance data
-		for person := range data.PlannedAttendance {
-			for len(data.PlannedAttendance[person]) < len(data.Days) {
-				data.PlannedAttendance[person] = append(data.PlannedAttendance[person], false)
-			}
-		}
 		return data, err
 	}
 }
@@ -129,19 +121,4 @@ func randomVersion() string {
 		panic(err)
 	}
 	return base64.StdEncoding.EncodeToString(b)
-}
-
-// Returns, for each day, how many people have indicated they want to come.
-func (data *Data) ComputeTotalAttendance() []int {
-	totals := []int{}
-	for dayindex := range data.Days {
-		total := 0
-		for _, attends := range data.PlannedAttendance {
-			if attends[dayindex] {
-				total += 1
-			}
-		}
-		totals = append(totals, total)
-	}
-	return totals
 }
