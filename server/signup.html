@@ -51,8 +51,14 @@ h2 {
             {{end}}
           </tr>
           {{range $duty := $.Duties}}
-          <tr>
-            <th>{{$duty}}</th>
+	  <tr>
+	    <th>
+	      {{if eq $duty "other"}}
+	        M:fridge T:appliances W:diningroom R:bread
+	      {{else}}
+		{{$duty}}
+	      {{end}}
+	    </th>
             {{range $dayindex := $days}}
               <td>
               {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
