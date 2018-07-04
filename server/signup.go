@@ -394,7 +394,7 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	since := time.Date(2017, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
+	since := time.Date(2018, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
 
 	startDate, _ := GetDateRange()
 	for dayindex, dayname := range currentData.Days {
@@ -413,6 +413,7 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	d := StatsData{People: []PersonStats{}, Since: since}
 	for _, s := range stats {
+		// if len(s.Signups) != 0 {
 		d.People = append(d.People, s)
 	}
 	sort.Sort(BySignupCount(d.People))
