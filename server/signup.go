@@ -18,6 +18,14 @@ import (
 	. "github.com/pikans/mealplan"
 )
 
+func mealplanStartDate() time.Time {
+	EST, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		panic(err)
+	}
+	return time.Date(2018, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
+}
+
 // Use a mutex to prevent concurrent access to the data file.
 // It's a bit unfortunate to control access to a file system resource using an in-memory mutex in
 // the server, but it's simple.
@@ -392,16 +400,10 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 		stats[u] = PersonStats{Signups: []Signup{}, Username: u}
 	}
 
-	EST, err := time.LoadLocation("America/New_York")
-	if err != nil {
-		panic(err)
-	}
-
-	mealplanStartDate := time.Date(2018, 5, 22, 0, 0, 0, 0, EST) // TODO: date selector
-
-	startDate, _ := GetDateRange()
+	mealplanStartDate := mealplanStartDate()
+	dbStartDate, _ := GetDateRange()
 	for dayindex, dayname := range currentData.Days {
-		date := startDate.AddDate(0, 0, dayindex)
+		date := dbStartDate.AddDate(0, 0, dayindex)
 		if date.Equal(mealplanStartDate) || date.After(mealplanStartDate) {
 			for _, duty := range Duties {
 				if dayindex < len(currentData.Assignments[duty]) {
