@@ -8,10 +8,10 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"errors"
+	"golang.org/x/crypto/acme/autocert"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"golang.org/x/crypto/acme/autocert"
 	"strings"
 
 	"github.com/pikans/mealplan/moira"
@@ -42,11 +42,11 @@ func getMITCertEmailAddressFullName(chains [][]*x509.Certificate) (moira.Email, 
 
 func run(handler http.Handler, unauthHandler http.Handler, register, listenhttp, listenhttps, authenticate, authorize, state string) {
 	letsEncryptManager := &autocert.Manager{
-            Cache:       autocert.DirCache(state),
-            Prompt:      autocert.AcceptTOS,
-            HostPolicy:  func(ctx context.Context, host string) error { return nil},
-            Email:       register,
-        }
+		Cache:      autocert.DirCache(state),
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: func(ctx context.Context, host string) error { return nil },
+		Email:      register,
+	}
 
 	clientCAsPEM, err := ioutil.ReadFile(authenticate)
 	if err != nil {
