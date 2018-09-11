@@ -64,7 +64,7 @@ h2 {
               {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
               {{if $assignee}}
 		{{if eq $assignee $.Username}}
-		  <button title="You are currently signed up for this duty. Clicking this button undoes that, but also emails yfnkm and your consciousness." name="abandon/{{$duty}}/{{$dayindex}}">Abandon!</button>
+		  <button title="You are currently signed up for this duty. Clicking this button undoes that, but also emails yfnkm and your conscience." name="abandon/{{$duty}}/{{$dayindex}}">Abandon!</button>
                 {{else if eq $assignee "_"}}
 		{{else}}
 		  <button disabled>{{$assignee}}</button>
