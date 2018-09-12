@@ -108,7 +108,7 @@ func main() {
 
 	to := []string{}
 	for _, duty := range group.Duties {
-		assignee := data.Assignments[duty][daysIn]
+		assignee := string(data.Assignments[duty][daysIn])
 		if assignee != "" {
 			to = append(to, assignee)
 		}
