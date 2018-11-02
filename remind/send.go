@@ -17,8 +17,8 @@ type ReminderGroup struct {
 }
 
 var DutyGroups = map[string]ReminderGroup{
-	"cook":  ReminderGroup{[]string{"Big cook", "Little cook"}, "today"},
-	"clean": ReminderGroup{[]string{"Cleaner 1", "Cleaner 2"}, "tonight"},
+	"cook":  ReminderGroup{[]string{"Big Cook", "Little Cook", "Tiny Cook"}, "today"},
+	"clean": ReminderGroup{[]string{"Cleaner 1", "Cleaner 2", "Cleaner 3"}, "tonight"},
 }
 
 func dayDeltaString(dayDelta int, todayText string) string {
@@ -61,11 +61,16 @@ http://mealplan.pikans.org/
 	}
 }
 
+
+
 // Returns whether any shifts are missing
 func mightBeCanceled(data *Data, day int) bool {
+	importantDuties := "Big Cook Little Cook Cleaner 1 Cleaner 2"
 	for _, duty := range Duties {
-		if data.Assignments[duty][day] == "" {
-			return true
+	 	if data.Assignments[duty][day] == "" {
+			if strings.Contains(importantDuties, duty) { // HACK but shouldn't cause any problems
+				return true
+			}
 		}
 	}
 	return false
