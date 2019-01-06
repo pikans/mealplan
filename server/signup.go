@@ -23,7 +23,7 @@ func mealplanStartDate() time.Time {
 	if err != nil {
 		panic(err)
 	}
-	return time.Date(2018, 9, 3, 0, 0, 0, 0, EST) // TODO: date selector
+	return time.Date(2019, 1, 7, 0, 0, 0, 0, EST) // TODO: date selector
 }
 
 // Use a mutex to prevent concurrent access to the data file.
