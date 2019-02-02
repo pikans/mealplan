@@ -97,10 +97,11 @@ func main() {
 	if group, ok = DutyGroups[task]; !ok {
 		log.Fatalf("no task '%s'", task)
 	}
+
 	if dayDelta, err = strconv.Atoi(os.Args[3]); err != nil {
 		log.Fatalf("invalid day delta '%s': %v", os.Args[2], err)
 	}
-
+	
 	data, err := ReadData(os.Args[1])
 	if err != nil {
 		log.Fatalf("couldn't read data from '%s': %v", os.Args[1], err)
@@ -115,10 +116,9 @@ func main() {
 	for _, duty := range group.Duties {
 		assignee := string(data.Assignments[duty][daysIn])
 		if assignee != "" {
-			to = append(to, assignee)
+			to = append(to, toEmail(assignee))
 		}
 	}
-
 	taskText := fmt.Sprintf("%s %s", task, dayDeltaString(dayDelta, group.TodayText))
 	sendReminder(to, taskText, mightBeCanceled(data, daysIn))
 }
