@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"time"
-
 	"github.com/pikans/mealplan/moira"
 )
 
@@ -44,7 +43,7 @@ func DaysIn() int {
 	return int(hoursIn / 24)
 }
 
-// Make the list of days of the current period (currently hardcoded for IAP)
+// Make the list of days of the current period (specified in GetDateRange())
 func makeDayNames() []string {
 	startDate, endDate := GetDateRange()
 	days := []string{}
