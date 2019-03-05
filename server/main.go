@@ -8,12 +8,12 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"errors"
+	"golang.org/x/crypto/acme"	
 	"golang.org/x/crypto/acme/autocert"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
-
 	"github.com/pikans/mealplan/moira"
 )
 
@@ -76,9 +76,12 @@ func run(handler http.Handler, unauthHandler http.Handler, register, listenhttp,
 		Addr: listenhttps,
 		TLSConfig: &tls.Config{
 			GetCertificate: letsEncryptManager.GetCertificate,
-
 			ClientCAs:  clientCAs,
 			ClientAuth: tls.VerifyClientCertIfGiven,
+			NextProtos: []string{
+				"h2", "http/1.1", // enable HTTP/2
+				acme.ALPNProto, // enable tls-alpn ACME challenges
+			},
 		},
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			if err := doAuthorize(req); err == nil {

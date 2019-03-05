@@ -12,9 +12,7 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"github.com/pikans/mealplan/moira"
-
 	. "github.com/pikans/mealplan"
 )
 
