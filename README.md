@@ -12,7 +12,7 @@ Running at <https://mealplan.pikans.org/>
 
 # Somewhat less manual way
 
-Before you deploy, you'll need to clone pika's cdist repo: <https://wiki.pikans.org/yfncc/git#yfncc-cdist>. Note down the path you clone this to. Navigate to the directory for the thing you'd like to change (either server or remind, probably), then edit the makefile variables at the top to match the prefixes to the path to yfncc-cdist you noted down earlier (i.e., replace `/Users/j/pika/yfncc-dist` with the full path to your copy of yfncc-cdist).
+Before you deploy, you'll need to clone pika's cdist repo: <https://wiki.pikans.org/computers/git#yfncc-cdist>. Note down the path you clone this to. Navigate to the directory for the thing you'd like to change (either server or remind, probably), then edit the makefile variables at the top to match the prefixes to the path to yfncc-cdist you noted down earlier (i.e., replace `/Users/j/pika/yfncc-dist` with the full path to your copy of yfncc-cdist).
 
 Now you can build the project with `make build`, and have cdist put it on the mealplan server with `make deploy`.
 
