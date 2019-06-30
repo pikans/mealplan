@@ -324,6 +324,21 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Not up to date! Got %v, wanted %v", got, want), http.StatusConflict)
 		return
 	}
+
+	endDate := r.FormValue("endDate")
+	if endDate != "" {
+		parsedEndDate, err = time.Parse(DateFormat, endDate)
+		if err {
+			http.Error(w, fmt.Sprintf("Invalid date %v, please provide a date in YYYY-MM-DD format", endDate), http.StatusBadRequest)
+			return
+		}
+		if parsedEndDate.Before(time.Now()) {
+			http.Error(w, "Can't set an end date in the past!", http.StatusBadRequest)
+			return
+		}
+		currentData.EndDate = endDate
+	}
+
 	_, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	for day, _ := range dayNames {
 		dayAssignments, ok := currentData.Assignments[day]
