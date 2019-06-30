@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/smtp"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,27 +32,27 @@ type DisplayData struct {
 
 func makeWeeksAndDayNames(endDate string) ([][]string, map[string]string) {
 	weeks := [][]string{}
-	dayNames = map[string]string{}
+	dayNames := map[string]string{}
 
 	today := time.Now()
 	todayOffset := today.Weekday() - time.Monday
 	if todayOffset < 0 {
 		todayOffset += 7
 	}
-	actualStart := today.AddDate(0, 0, -todayOffset)
+	actualStart := today.AddDate(0, 0, -int(todayOffset))
 
-	end := time.Parse(DateFormat, endDate)
+	end, _ := time.Parse(DateFormat, endDate)
 	endOffset := time.Sunday - end.Weekday()
 	if endOffset < 0 {
 		endOffset += 7
 	}
-	actualEnd := end.AddDate(0, 0, endOffset)
+	actualEnd := end.AddDate(0, 0, int(endOffset))
 
 	for day := actualStart; day.Year() < actualEnd.Year() || (day.Year() == actualEnd.Year() && day.YearDay() <= actualEnd.YearDay()); day = day.AddDate(0, 0, 1) {
-		if day.Weekday() == Monday {
+		if day.Weekday() == time.Monday {
 			weeks = append(weeks, []string{})
 		}
-		dayString = day.Format(DateFormat)
+		dayString := day.Format(DateFormat)
 		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], dayString)
 		dayNames[dayString] = day.Format("Monday (1/2)")
 	}
@@ -187,7 +185,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		if len(splitKey) == 3 && splitKey[0] == "claim" {
 			duty := splitKey[1]
 			day := splitKey[2]
-			err = transact(func(currentData *Data) error {
+			err := transact(func(currentData *Data) error {
 				dayAssignments, ok := currentData.Assignments[day]
 				if !ok {
 					dayAssignments = make(map[string]moira.Username)
@@ -209,7 +207,7 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		if len(splitKey) == 3 && splitKey[0] == "abandon" {
 			duty := splitKey[1]
 			day := splitKey[2]
-			err = transact(func(currentData *Data) error {
+			err := transact(func(currentData *Data) error {
 				dayAssignments, ok := currentData.Assignments[day]
 				if !ok {
 					return errors.New("not yours, no need to abandon it.")
@@ -326,7 +324,7 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Not up to date! Got %v, wanted %v", got, want), http.StatusConflict)
 		return
 	}
-	_, dayNames := makeWeeksAndDayNames(currentData.endDate)
+	_, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	for day, _ := range dayNames {
 		dayAssignments, ok := currentData.Assignments[day]
 		if !ok {
