@@ -15,13 +15,11 @@ const DataFile = "mealplan.json"
 
 const DateFormat = "2006-01-02"
 
-// The list of duties (currently hard-coded)
-var Duties = []string{"Big Cook", "Little Cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3", "Fridge Ninja", "Brunch Cook", "Brunch Cleaner"}
-
 // The data that is stored on disk. A map of date to (map of duty to person), an end date, and a version ID in case of concurrent edits.
 type Data struct {
 	Assignments       map[string]map[string]moira.Username
 	//removed: PlannedAttendance map[moira.Username][]bool
+	Duties            []string
 	EndDate           string
 	VersionID         string
 }
@@ -30,6 +28,7 @@ type Data struct {
 func emptyData() *Data {
 	return &Data{
 		make(map[string]map[string]moira.Username),
+		[]string{"Big Cook", "Little Cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3"}
 		time.Now().AddDate(0, 1, 0).Format(DateFormat),
 		randomVersion(),
 	}

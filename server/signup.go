@@ -84,7 +84,7 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
-		Duties:      Duties,
+		Duties:      currentData.Duties,
 		Authorized:  false,
 		Username:    "",
 		DayNames:    dayNames,
@@ -120,7 +120,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("displaying for user %v", username)
-	for _, duty := range Duties {
+	for _, duty := range currentData.Duties {
 		// If duties contain slashes, the logic in claimHandler will break, because the button IDs use
 		// slashes as separators (see signup.html).
 		if strings.Contains(duty, "/") {
@@ -129,7 +129,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
-		Duties:      Duties,
+		Duties:      currentData.Duties,
 		Authorized:  true,
 		Username:    username,
 		DayNames:    dayNames,
@@ -287,7 +287,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
-		Duties:      Duties,
+		Duties:      currentData.Duties,
 		Authorized:  true,
 		Username:    "",
 		DayNames:    dayNames,
@@ -339,6 +339,17 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 		currentData.EndDate = endDate
 	}
 
+	duties := r.FormValue("duties")
+	if strings.Contains(duties, "/") {
+		http.Error(w, "Duties can't contain slashes", http.StatusBadRequest)
+		return
+	}
+	currentData.Duties := make([]string)
+	for _, duty := range duties.split(",") {
+		duty = strings.TrimSpace(duty)
+		currentData.Duties = append(currentData.Duties, duty)
+	}
+
 	_, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	for day, _ := range dayNames {
 		dayAssignments, ok := currentData.Assignments[day]
@@ -346,7 +357,7 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 			dayAssignments = make(map[string]moira.Username)
 			currentData.Assignments[day] = dayAssignments
 		}
-		for _, duty := range Duties {
+		for _, duty := range currentData.Duties {
 			if values, ok := r.Form[fmt.Sprintf("assignee/%v/%v", duty, day)]; ok && len(values) != 0 {
 				dayAssignments[duty] = moira.Username(values[0])
 			}

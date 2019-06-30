@@ -19,7 +19,9 @@ td {
 	<body>
 		<h1>Sekrit Admin Interface</h1>
 		<form action="/adminSave" method="POST">
+			<button name="topsave">Save!</button>
 			Change end date: <input type="text" name="endDate" value=""/>
+			Duties (comma-separated): <input type="text" name="duties" value="{{range $index, $duty = $.Duties}}{{if $index}}, {{end}}{{$duty}}{{end}}"/>
 			{{$ass := .Assignments}}
 			{{range $week, $days := .Weeks}}
 			<div class="week">
