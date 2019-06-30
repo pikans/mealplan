@@ -27,6 +27,7 @@ type DisplayData struct {
 	DayNames    map[string]string
 	Weeks       [][]string
 	Assignments map[string]map[string]moira.Username
+	EndDate     string
 	VersionID   string
 }
 
@@ -90,6 +91,7 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		DayNames:    dayNames,
 		Weeks:       weeks,
 		Assignments: currentData.Assignments,
+		EndDate:     currentData.EndDate,
 		VersionID:   currentData.VersionID,
 	}
 	err = t.Execute(w, d)
@@ -135,6 +137,7 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		DayNames:    dayNames,
 		Weeks:       weeks,
 		Assignments: currentData.Assignments,
+		EndDate:     currentData.EndDate,
 		VersionID:   currentData.VersionID,
 	}
 	err = t.Execute(w, d)
@@ -293,6 +296,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		DayNames:    dayNames,
 		Weeks:       weeks,
 		Assignments: currentData.Assignments,
+		EndDate:     currentData.EndDate,
 		VersionID:   currentData.VersionID, // Store the version in a hidden field
 	}
 	err = t.Execute(w, d)
@@ -326,18 +330,16 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	endDate := r.FormValue("endDate")
-	if endDate != "" {
-		parsedEndDate, err := time.Parse(DateFormat, endDate)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Invalid date %v, please provide a date in YYYY-MM-DD format", endDate), http.StatusBadRequest)
-			return
-		}
-		if parsedEndDate.Before(time.Now()) {
-			http.Error(w, "Can't set an end date in the past!", http.StatusBadRequest)
-			return
-		}
-		currentData.EndDate = endDate
+	parsedEndDate, err := time.Parse(DateFormat, endDate)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid date %v, please provide a date in YYYY-MM-DD format", endDate), http.StatusBadRequest)
+		return
 	}
+	if parsedEndDate.Before(time.Now()) {
+		http.Error(w, "Can't set an end date in the past!", http.StatusBadRequest)
+		return
+	}
+	currentData.EndDate = endDate
 
 	duties := r.FormValue("duties")
 	if strings.Contains(duties, "/") {

@@ -14,14 +14,21 @@ td {
 	border: 1px solid black;
 	text-align: center;
 }
+td input {
+	width: 12em;
+}
+input#duties {
+	width: 40em;
+}
+
 		</style>
 	</head>
 	<body>
 		<h1>Sekrit Admin Interface</h1>
 		<form action="/adminSave" method="POST">
 			<button name="topsave">Save!</button>
-			Change end date: <input type="text" name="endDate" value=""/>
-			Duties (comma-separated): <input type="text" name="duties" value="{{range $index, $duty = $.Duties}}{{if $index}}, {{end}}{{$duty}}{{end}}"/>
+			<div>End date: <input type="text" name="endDate" value="{{$.EndDate}}"/></div>
+			<div>Duties (comma-separated): <input type="text" id="duties" name="duties" value="{{range $index, $duty := $.Duties}}{{if $index}}, {{end}}{{$duty}}{{end}}"/></div>
 			{{$ass := .Assignments}}
 			{{range $week, $days := .Weeks}}
 			<div class="week">
