@@ -43,6 +43,9 @@ func makeWeeksAndDayNames(endDate string) ([][]string, map[string]string) {
 	actualStart := today.AddDate(0, 0, -int(todayOffset))
 
 	end, _ := time.Parse(DateFormat, endDate)
+	if end.Before(today) {
+		end = today
+	}
 	endOffset := time.Sunday - end.Weekday()
 	if endOffset < 0 {
 		endOffset += 7
@@ -333,10 +336,6 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	parsedEndDate, err := time.Parse(DateFormat, endDate)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid date %v, please provide a date in YYYY-MM-DD format", endDate), http.StatusBadRequest)
-		return
-	}
-	if parsedEndDate.Before(time.Now()) {
-		http.Error(w, "Can't set an end date in the past!", http.StatusBadRequest)
 		return
 	}
 	currentData.EndDate = endDate
