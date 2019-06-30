@@ -2,6 +2,7 @@ package mealplan
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -29,7 +30,7 @@ type Data struct {
 func emptyData() *Data {
 	return &Data{
 		make(map[string]map[string]moira.Username),
-		time.Now().AddDate(0, 1, 0).format(DateFormat),
+		time.Now().AddDate(0, 1, 0).Format(DateFormat),
 		randomVersion(),
 	}
 }
@@ -67,7 +68,7 @@ func WriteData(dataFile string, data *Data) error {
 	if err != nil {
 		return err
 	}
-	err := ioutil.WriteFile(dataFile, jsonBytes, 0644)
+	err = ioutil.WriteFile(dataFile, jsonBytes, 0644)
 	return err
 }
 
