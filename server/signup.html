@@ -59,9 +59,9 @@ h2 {
 		{{$duty}}
 	      {{end}}
 	    </th>
-            {{range $dayindex := $days}}
+            {{range $day := $days}}
               <td>
-              {{$assignee := (index (index $.Assignments $duty) $dayindex)}}
+              {{$assignee := (index (index $.Assignments $day) $duty)}}
               {{if $assignee}}
 		{{if eq $assignee $.Username}}
 		  <button title="You are currently signed up for this duty. Clicking this button undoes that, but also emails yfnkm and your conscience." name="abandon/{{$duty}}/{{$dayindex}}">Abandon!</button>
@@ -70,7 +70,7 @@ h2 {
 		  <button disabled>{{$assignee}}</button>
 		{{end}}
               {{else if $.Authorized}}
-              <button name="claim/{{$duty}}/{{$dayindex}}">Claim!</button>
+              <button name="claim/{{$duty}}/{{$day}}">Claim!</button>
               {{end}}
               </td>
             {{end}}

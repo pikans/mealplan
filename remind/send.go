@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	. "github.com/pikans/mealplan"
 )
@@ -64,10 +65,15 @@ http://mealplan.pikans.org/
 
 
 // Returns whether any shifts are missing
-func mightBeCanceled(data *Data, day int) bool {
+func mightBeCanceled(data *Data, day string) bool {
 	importantDuties := "Big Cook Little Cook Cleaner 1 Cleaner 2"
+	dayAssignments, ok := data.Assignments[day]
+	if !ok {
+		return true
+	}
 	for _, duty := range Duties {
-	 	if data.Assignments[duty][day] == "" {
+		assignee, ok = dayAssignments[duty]
+	 	if !ok || assignee == "" {
 			if strings.Contains(importantDuties, duty) { // HACK but shouldn't cause any problems
 				return true
 			}
@@ -107,18 +113,18 @@ func main() {
 		log.Fatalf("couldn't read data from '%s': %v", os.Args[1], err)
 	}
 
-	daysIn := DaysIn() + dayDelta
-	if daysIn >= len(data.Days) {
-		log.Fatalf("past the end of time: %d (0-indexed) days into %d-day plan", daysIn, len(data.Days))
-	}
-
 	to := []string{}
-	for _, duty := range group.Duties {
-		assignee := string(data.Assignments[duty][daysIn])
-		if assignee != "" {
-			to = append(to, toEmail(assignee))
+
+	day := time.Now().AddDate(0, 0, dayDelta).format(DateFormat)
+	dayAssignments, ok := data.Assignments[day]
+	if ok {
+		for _, duty := range group.Duties {
+			assignee, ok := string(dayAssignments[duty])
+			if ok && assignee != "" {
+				to = append(to, toEmail(assignee))
+			}
 		}
 	}
 	taskText := fmt.Sprintf("%s %s", task, dayDeltaString(dayDelta, group.TodayText))
-	sendReminder(to, taskText, mightBeCanceled(data, daysIn))
+	sendReminder(to, taskText, mightBeCanceled(data, day))
 }

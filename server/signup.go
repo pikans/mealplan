@@ -16,14 +16,6 @@ import (
 	. "github.com/pikans/mealplan"
 )
 
-func mealplanStartDate() time.Time {
-	EST, err := time.LoadLocation("America/New_York")
-	if err != nil {
-		panic(err)
-	}
-	return time.Date(2019, 1, 7, 0, 0, 0, 0, EST) // TODO: date selector
-}
-
 // Use a mutex to prevent concurrent access to the data file.
 // It's a bit unfortunate to control access to a file system resource using an in-memory mutex in
 // the server, but it's simple.
@@ -34,27 +26,41 @@ type DisplayData struct {
 	Duties      []string
 	Authorized  bool
 	Username    moira.Username
-	DayNames    []string
-	Weeks       [][]int
-	Assignments map[string][]moira.Username
+	DayNames    map[string]string
+	Weeks       [][]string
+	Assignments map[string]map[string]moira.Username
 	VersionID   string
 }
 
-func makeWeeks(nrDays int) [][]int {
-	weeks := [][]int{}
-	for i := 0; i < nrDays; i++ {
-		if i%7 == 0 {
-			weeks = append(weeks, []int{})
+func makeWeeksAndDayNames(endDate string) ([][]string, map[string]string) {
+	weeks := [][]string{}
+	dayNames = map[string]string{}
+
+	today := time.Now()
+	todayOffset := today.Weekday() - time.Monday
+	if todayOffset < 0 {
+		todayOffset += 7
+	}
+	actualStart := today.AddDate(0, 0, -todayOffset)
+
+	end := time.Parse(DateFormat, endDate)
+	endOffset := time.Sunday - end.Weekday()
+	if endOffset < 0 {
+		endOffset += 7
+	}
+	actualEnd := end.AddDate(0, 0, endOffset)
+
+	for day := actualStart; day.Year() < actualEnd.Year() || (day.Year() == actualEnd.Year() && day.YearDay() <= actualEnd.YearDay()); day = day.AddDate(0, 0, 1) {
+		if day.Weekday() == Monday {
+			weeks = append(weeks, []string{})
 		}
-		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], i)
+		dayString = day.Format(DateFormat)
+		weeks[len(weeks)-1] = append(weeks[len(weeks)-1], dayString)
+		dayNames[dayString] = day.Format("Monday (1/2)")
 	}
-	weeksIn := DaysIn() / 7
-	if weeksIn > len(weeks)-1 {
-		weeksIn = len(weeks) - 1
-	}
-	remainingWeeks := weeks[weeksIn:]
-	return remainingWeeks
+	return weeks, dayNames
 }
+
 
 func handleErr(w http.ResponseWriter, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -78,12 +84,13 @@ func unauthHandler(w http.ResponseWriter, r *http.Request) {
 		handleErr(w, err)
 		return
 	}
+	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
 		Duties:      Duties,
 		Authorized:  false,
 		Username:    "",
-		DayNames:    currentData.Days,
-		Weeks:       makeWeeks(len(currentData.Days)),
+		DayNames:    dayNames,
+		Weeks:       weeks,
 		Assignments: currentData.Assignments,
 		VersionID:   currentData.VersionID,
 	}
@@ -122,12 +129,13 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 			panic("duties can't contain slashes")
 		}
 	}
+	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
 		Duties:      Duties,
 		Authorized:  true,
 		Username:    username,
-		DayNames:    currentData.Days,
-		Weeks:       makeWeeks(len(currentData.Days)),
+		DayNames:    dayNames,
+		Weeks:       weeks,
 		Assignments: currentData.Assignments,
 		VersionID:   currentData.VersionID,
 	}
@@ -178,55 +186,46 @@ func claimHandler(w http.ResponseWriter, r *http.Request) {
 		splitKey := strings.Split(key, "/")
 		if len(splitKey) == 3 && splitKey[0] == "claim" {
 			duty := splitKey[1]
-			dayIndex, err := strconv.Atoi(splitKey[2])
-			if err != nil {
-				handleErr(w, err)
-				return
-			}
-			dayname := ""
+			day := splitKey[2]
 			err = transact(func(currentData *Data) error {
-				ass, ok := currentData.Assignments[duty]
-				if !(ok && dayIndex < len(ass)) {
-					return errors.New("no such duty")
+				dayAssignments, ok := currentData.Assignments[day]
+				if !ok {
+					dayAssignments = make(map[string]moira.Username)
+					currentData.Assignments[day] = dayAssignments
 				}
-				if ass[dayIndex] != "" {
+				assignee, ok := dayAssignments[duty]
+				if ok && assignee != "" {
 					return errors.New("somebody else got this one already.")
 				}
-				ass[dayIndex] = username
-				dayname = currentData.Days[dayIndex]
+				dayAssignments[duty] = username
 				return nil
 			})
 			if err != nil {
 				break
 			}
-			log.Printf("%v claimed %v/%v", username, duty, dayname)
+			log.Printf("%v claimed %v/%v", username, duty, day)
 			break
 		}
 		if len(splitKey) == 3 && splitKey[0] == "abandon" {
 			duty := splitKey[1]
-			dayIndex, err := strconv.Atoi(splitKey[2])
-			if err != nil {
-				handleErr(w, err)
-				return
-			}
-			dayname := ""
+			day := splitKey[2]
 			err = transact(func(currentData *Data) error {
-				ass, ok := currentData.Assignments[duty]
-				if !(ok && dayIndex < len(ass)) {
-					return errors.New("no such duty")
-				}
-				if ass[dayIndex] != username {
+				dayAssignments, ok := currentData.Assignments[day]
+				if !ok {
 					return errors.New("not yours, no need to abandon it.")
 				}
-				ass[dayIndex] = ""
-				dayname = currentData.Days[dayIndex]
+				assignee, ok := dayAssignments[duty]
+				if !ok || assignee != username {
+					return errors.New("not yours, no need to abandon it.")
+				}
+				dayAssignments[duty] = ""
 				return nil
 			})
 			if err != nil {
 				break
 			}
 
-			log.Printf("%v abandoned %v/%v", username, duty, dayname)
+			log.Printf("%v abandoned %v/%v", username, duty, day)
 
 			err = smtp.SendMail(
 				"outgoing.mit.edu:smtp",
@@ -238,7 +237,7 @@ To: yfnkm@mit.edu
 Cc: %s
 Subject: %s unclaimed %v/%v -- eom
 
-`, username.Email(), username, duty, dayname)))
+`, username.Email(), username, duty, day)))
 			if err != nil {
 				log.Printf("%v", err)
 			}
@@ -288,12 +287,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		handleErr(w, err)
 		return
 	}
+	weeks, dayNames := makeWeeksAndDayNames(currentData.EndDate)
 	d := DisplayData{
 		Duties:      Duties,
 		Authorized:  true,
 		Username:    "",
-		DayNames:    currentData.Days,
-		Weeks:       makeWeeks(len(currentData.Days)),
+		DayNames:    dayNames,
+		Weeks:       weeks,
 		Assignments: currentData.Assignments,
 		VersionID:   currentData.VersionID, // Store the version in a hidden field
 	}
@@ -326,10 +326,16 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Not up to date! Got %v, wanted %v", got, want), http.StatusConflict)
 		return
 	}
-	for _, duty := range Duties {
-		for dayindex := range currentData.Assignments[duty] {
-			if values, ok := r.Form[fmt.Sprintf("assignee/%v/%v", duty, dayindex)]; ok && len(values) != 0 {
-				currentData.Assignments[duty][dayindex] = moira.Username(values[0])
+	_, dayNames := makeWeeksAndDayNames(currentData.endDate)
+	for day, _ := range dayNames {
+		dayAssignments, ok := currentData.Assignments[day]
+		if !ok {
+			dayAssignments = make(map[string]moira.Username)
+			currentData.Assignments[day] = dayAssignments
+		}
+		for _, duty := range Duties {
+			if values, ok := r.Form[fmt.Sprintf("assignee/%v/%v", duty, day)]; ok && len(values) != 0 {
+				dayAssignments[duty] = moira.Username(values[0])
 			}
 		}
 	}
@@ -341,6 +347,8 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	// Display the admin interface again
 	http.Redirect(w, r, "/admin", http.StatusFound)
 }
+
+/* stats page is disabled for now, you'll need to do some refactoring if you want to bring it back 
 
 type Signup struct {
 	Date, Duty string
@@ -427,6 +435,7 @@ func adminStatsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+*/
 
 // This is the overall handler which decides, for authorized users, which page to display.
 func getHandler() http.Handler {
@@ -435,7 +444,7 @@ func getHandler() http.Handler {
 	mux.HandleFunc("/claim", claimHandler)
 	mux.HandleFunc("/admin", adminHandler)
 	mux.HandleFunc("/adminSave", adminSaveHandler)
-	mux.HandleFunc("/stats", adminStatsHandler)
+//	mux.HandleFunc("/stats", adminStatsHandler)
 	return mux
 }
 

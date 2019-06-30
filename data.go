@@ -2,7 +2,7 @@ package mealplan
 
 import (
 	"encoding/base64"
-	"encoding/gob"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"time"
@@ -10,59 +10,26 @@ import (
 )
 
 // default
-const DataFile = "signups.dat"
+const DataFile = "mealplan.json"
 
-const DateFormat = "Monday (1/2)"
+const DateFormat = "2006-01-02"
 
 // The list of duties (currently hard-coded)
 var Duties = []string{"Big Cook", "Little Cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3", "Fridge Ninja", "Brunch Cook", "Brunch Cleaner"}
 
-// The data that is stored on disk. For "simplicity", the application just serializes and
-// deserializes the entire state into / out of a single file, rather than making use of a full-blown
-// database.
+// The data that is stored on disk. A map of date to (map of duty to person), an end date, and a version ID in case of concurrent edits.
 type Data struct {
-	Days              []string
-	Assignments       map[string][]moira.Username
+	Assignments       map[string]map[string]moira.Username
 	//removed: PlannedAttendance map[moira.Username][]bool
+	EndDate           string
 	VersionID         string
-}
-
-func GetDateRange() (startDate time.Time, endDate time.Time) {
-	EST, err := time.LoadLocation("America/New_York")
-	if err != nil {
-		panic(err)
-	}
-	startDate = time.Date(2019, 1, 7, 0, 0, 0, 0, EST)
-	endDate = time.Date(2019, 9, 1, 0, 0, 0, 0, EST)
-	return
-}
-
-func DaysIn() int {
-	startDate, _ := GetDateRange()
-	hoursIn := time.Now().Sub(startDate).Hours()
-	return int(hoursIn / 24)
-}
-
-// Make the list of days of the current period (specified in GetDateRange())
-func makeDayNames() []string {
-	startDate, endDate := GetDateRange()
-	days := []string{}
-	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
-		days = append(days, date.Format(DateFormat))
-	}
-	return days
 }
 
 // Make the empty state: no assignments
 func emptyData() *Data {
-	assignments := make(map[string][]moira.Username)
-	days := makeDayNames()
-	for _, duty := range Duties {
-		assignments[duty] = make([]moira.Username, len(days))
-	}
 	return &Data{
-		days,
-		assignments,
+		make(map[string]map[string]moira.Username),
+		time.Now().AddDate(0, 1, 0).format(DateFormat),
 		randomVersion(),
 	}
 }
@@ -81,17 +48,13 @@ func ReadData(dataFile string) (*Data, error) {
 		// Read the data out of the file
 		defer file.Close()
 		data := new(Data)
-		dec := gob.NewDecoder(file)
-		err := dec.Decode(data)
+		jsonBytes, err := ioutil.ReadAll(file)
 		if err != nil {
 			return nil, err
 		}
-		data.Days = makeDayNames() // overwrite
-		// If we've extended the number of days, or this is a fresh file: add blank assignments to fill
-		for _, duty := range Duties {
-			for len(data.Assignments[duty]) < len(data.Days) {
-				data.Assignments[duty] = append(data.Assignments[duty], "")
-			}
+		err = json.Unmarshal(jsonBytes, &data)
+		if err != nil {
+			return nil, err
 		}
 		return data, err
 	}
@@ -100,13 +63,11 @@ func ReadData(dataFile string) (*Data, error) {
 // Write the entire data back to the file
 func WriteData(dataFile string, data *Data) error {
 	data.VersionID = randomVersion()
-	file, err := os.Create(dataFile)
+	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-	enc := gob.NewEncoder(file)
-	err = enc.Encode(data)
+	err := ioutil.WriteFile(dataFile, jsonBytes, 0644)
 	return err
 }
 

@@ -32,10 +32,10 @@ td {
 					{{range $duty := $.Duties}}
 					<tr>
 						<th>{{$duty}}</th>
-						{{range $dayindex := $days}}
-						{{$assignee := (index (index $ass $duty) $dayindex)}}
+						{{range $day := $days}}
+						{{$assignee := (index (index $ass $day) $duty)}}
 						<td>
-							<input type="text" name="assignee/{{$duty}}/{{$dayindex}}" value="{{$assignee}}"/>
+							<input type="text" name="assignee/{{$duty}}/{{$day}}" value="{{$assignee}}"/>
 						</td>
 						{{end}}
 					</tr>
