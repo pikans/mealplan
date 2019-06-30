@@ -64,7 +64,7 @@ func ReadData(dataFile string) (*Data, error) {
 // Write the entire data back to the file
 func WriteData(dataFile string, data *Data) error {
 	data.VersionID = randomVersion()
-	jsonBytes, err := json.Marshal(data)
+	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		return err
 	}
