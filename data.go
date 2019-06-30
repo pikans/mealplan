@@ -28,7 +28,7 @@ type Data struct {
 func emptyData() *Data {
 	return &Data{
 		make(map[string]map[string]moira.Username),
-		[]string{"Big Cook", "Little Cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3"}
+		[]string{"Big Cook", "Little Cook", "Tiny Cook", "Cleaner 1", "Cleaner 2", "Cleaner 3"},
 		time.Now().AddDate(0, 1, 0).Format(DateFormat),
 		randomVersion(),
 	}
