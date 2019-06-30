@@ -118,7 +118,7 @@ func main() {
 	if ok {
 		for _, duty := range group.Duties {
 			assignee, ok := dayAssignments[duty]
-			if ok && string(assignee) != "" {
+			if ok && string(assignee) != "" && string(assignee) != "_" {
 				to = append(to, toEmail(string(assignee)))
 			}
 		}
