@@ -327,8 +327,8 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	endDate := r.FormValue("endDate")
 	if endDate != "" {
-		parsedEndDate, err = time.Parse(DateFormat, endDate)
-		if err {
+		parsedEndDate, err := time.Parse(DateFormat, endDate)
+		if err != nil {
 			http.Error(w, fmt.Sprintf("Invalid date %v, please provide a date in YYYY-MM-DD format", endDate), http.StatusBadRequest)
 			return
 		}
