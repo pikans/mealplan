@@ -13,13 +13,14 @@ import (
 )
 
 type ReminderGroup struct {
-	Duties    []string
-	TodayText string
+	Duties          []string
+	ImportantDuties []string
+	TodayText       string
 }
 
 var DutyGroups = map[string]ReminderGroup{
-	"cook":  ReminderGroup{[]string{"Big Cook", "Little Cook", "Tiny Cook"}, "today"},
-	"clean": ReminderGroup{[]string{"Cleaner 1", "Cleaner 2", "Cleaner 3"}, "tonight"},
+	"cook":  ReminderGroup{[]string{"Big Cook", "Little Cook", "Tiny Cook"}, []string{"Big Cook", "Little Cook"}, "today"},
+	"clean": ReminderGroup{[]string{"Cleaner 1", "Cleaner 2", "Cleaner 3"}, []string{"Cleaner 1", "Cleaner 2"}, "tonight"},
 }
 
 func dayDeltaString(dayDelta int, todayText string) string {
@@ -65,18 +66,15 @@ http://mealplan.pikans.org/
 
 
 // Returns whether any shifts are missing
-func mightBeCanceled(data *Data, day string) bool {
-	importantDuties := "Big Cook Little Cook Cleaner 1 Cleaner 2"
+func mightBeCanceled(data *Data, day string, group ReminderGroup) bool {
 	dayAssignments, ok := data.Assignments[day]
 	if !ok {
 		return true
 	}
-	for _, duty := range Duties {
-		assignee, ok = dayAssignments[duty]
+	for _, duty := range group.ImportantDuties {
+		assignee, ok := dayAssignments[duty]
 	 	if !ok || assignee == "" {
-			if strings.Contains(importantDuties, duty) { // HACK but shouldn't cause any problems
-				return true
-			}
+			return true
 		}
 	}
 	return false
@@ -115,16 +113,16 @@ func main() {
 
 	to := []string{}
 
-	day := time.Now().AddDate(0, 0, dayDelta).format(DateFormat)
+	day := time.Now().AddDate(0, 0, dayDelta).Format(DateFormat)
 	dayAssignments, ok := data.Assignments[day]
 	if ok {
 		for _, duty := range group.Duties {
-			assignee, ok := string(dayAssignments[duty])
-			if ok && assignee != "" {
-				to = append(to, toEmail(assignee))
+			assignee, ok := dayAssignments[duty]
+			if ok && string(assignee) != "" {
+				to = append(to, toEmail(string(assignee)))
 			}
 		}
 	}
 	taskText := fmt.Sprintf("%s %s", task, dayDeltaString(dayDelta, group.TodayText))
-	sendReminder(to, taskText, mightBeCanceled(data, day))
+	sendReminder(to, taskText, mightBeCanceled(data, day, group))
 }
