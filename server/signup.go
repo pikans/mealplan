@@ -344,8 +344,8 @@ func adminSaveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Duties can't contain slashes", http.StatusBadRequest)
 		return
 	}
-	currentData.Duties := make([]string)
-	for _, duty := range duties.split(",") {
+	currentData.Duties = []string{}
+	for _, duty := range strings.Split(duties, ",") {
 		duty = strings.TrimSpace(duty)
 		currentData.Duties = append(currentData.Duties, duty)
 	}
