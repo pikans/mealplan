@@ -2,4 +2,4 @@
 *.pem
 *.swp
 server/server
-admin/admin
+remind/remind
